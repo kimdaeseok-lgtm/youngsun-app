@@ -1,0 +1,135 @@
+"use client";
+
+import { useState } from "react";
+import type { SheetEntry } from "@/types/entry";
+
+const today = () => new Date().toISOString().slice(0, 10);
+const ACTION_OPTIONS = ["접수", "수리완료", "교체완료", "이상없음", "대기"] as const;
+
+export default function ActionModal({
+  entry,
+  onClose,
+  onSuccess,
+}: {
+  entry: SheetEntry;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [actionContent, setActionContent] = useState<(typeof ACTION_OPTIONS)[number] | "">("");
+  const [actionDate, setActionDate] = useState(today());
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const actionPhotoUrl = "";
+
+      const res = await fetch(`/api/entries/${entry.id}/action`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actionContent: actionContent.trim(),
+          actionPhotoUrl,
+          actionDate: actionDate || today(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장에 실패했습니다.");
+
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+          <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
+            조치 입력
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            연번 {entry.id} · {entry.requester} · {entry.location}
+          </p>
+          <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">
+            {entry.details}
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5">
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300"
+            >
+              {error}
+            </div>
+          )}
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                조치내용
+              </span>
+              <select
+                value={actionContent}
+                onChange={(e) =>
+                  setActionContent(
+                    (e.target.value as (typeof ACTION_OPTIONS)[number] | "") ?? ""
+                  )
+                }
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              >
+                <option value="" disabled>
+                  선택하세요
+                </option>
+                {ACTION_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                조치날짜
+              </span>
+              <input
+                type="date"
+                value={actionDate}
+                onChange={(e) => setActionDate(e.target.value)}
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+            </label>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-xl border border-zinc-300 bg-white py-3 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              {loading ? "저장 중…" : "저장"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
