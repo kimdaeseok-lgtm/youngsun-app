@@ -118,7 +118,15 @@ export async function getEntries(): Promise<SheetEntry[]> {
     range: `${quoteSheetNameIfNeeded(sheetName)}!A2:J`,
   });
   const rows = (res.data.values ?? []) as string[][];
-  return rows.map((row) => rowToEntry(row));
+  return rows
+    .map((row) => rowToEntry(row))
+    .filter((e) => {
+      const requester = (e.requester ?? "").trim();
+      const location = (e.location ?? "").trim();
+      const details = (e.details ?? "").trim();
+      // 요청자/장소/내용이 모두 비어있는 행(테스트/시스템용)은 앱 목록에서 제외
+      return Boolean(requester || location || details);
+    });
 }
 
 /** G열(조치사항)이 비어 있는 항목만 */
