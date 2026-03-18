@@ -36,9 +36,10 @@ export default function FcmTokenLogger() {
           return;
         }
 
-        const registration = await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js"
-        );
+        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+
+        // 활성화된 서비스 워커가 있을 때까지 대기 (getToken은 반드시 active SW 필요)
+        const registration = await navigator.serviceWorker.ready;
 
         const token = await getToken(messaging, {
           vapidKey,
