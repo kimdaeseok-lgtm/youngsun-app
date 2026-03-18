@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { uploadRequestPhoto } from "@/lib/upload";
 
@@ -14,6 +14,8 @@ export default function RequestPage() {
     details: "",
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,19 +137,53 @@ export default function RequestPage() {
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-zinc-600">
-                사진 (선택) · 모바일에서 카메라 촬영 가능
+                사진 (선택)
               </span>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+                >
+                  카메라 촬영
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+                >
+                  파일 선택
+                </button>
+              </div>
+
               <input
+                ref={cameraInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium"
+                className="hidden"
               />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                className="hidden"
+              />
+
               {photoFile && (
-                <p className="mt-2 text-sm text-zinc-500">
+                <div className="mt-2 flex items-center justify-between gap-3 text-sm text-zinc-500">
                   선택: {photoFile.name}
-                </p>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoFile(null)}
+                    className="shrink-0 rounded-lg px-2 py-1 text-sm text-zinc-600 underline hover:text-zinc-800"
+                  >
+                    제거
+                  </button>
+                </div>
               )}
             </label>
           </div>
