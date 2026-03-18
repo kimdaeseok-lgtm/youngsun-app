@@ -12,13 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* PC·모바일 모두 흰색 배경으로 통일 (다크모드 미적용) */
 body {
   background: var(--background);
   color: var(--foreground);

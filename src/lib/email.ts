@@ -9,12 +9,12 @@ function getAdminEmails(): string[] {
   return emails;
 }
 
-function getTransporter() {
+function getTransporter(): ReturnType<typeof nodemailer.createTransport> | null {
   const host = process.env.SMTP_HOST ?? "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) throw new Error("SMTP_USER and SMTP_PASS are required for email.");
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  if (!user || !pass) return null;
   return nodemailer.createTransport({
     host,
     port,
@@ -37,6 +37,7 @@ export async function sendNewRequestNotification(
   if (toList.length === 0) return;
 
   const transporter = getTransporter();
+  if (!transporter) return; // SMTP 미설정 시 메일 생략 (시트 접수는 정상 진행)
   const photoLink = photoUrl ? `사진 확인: ${photoUrl}` : "(사진 없음)";
 
   const html = `

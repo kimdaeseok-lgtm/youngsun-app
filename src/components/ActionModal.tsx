@@ -53,17 +53,17 @@ export default function ActionModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+        className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
+        <div className="border-b border-zinc-200 px-5 py-4">
+          <h2 className="text-lg font-semibold text-zinc-800">
             조치 입력
           </h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-500">
             연번 {entry.id} · {entry.requester} · {entry.location}
           </p>
-          <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">
+          <p className="mt-1 line-clamp-2 text-sm text-zinc-600">
             {entry.details}
           </p>
         </div>
@@ -71,14 +71,14 @@ export default function ActionModal({
           {error && (
             <div
               role="alert"
-              className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300"
+              className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
             >
               {error}
             </div>
           )}
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="mb-1 block text-sm font-medium text-zinc-600">
                 조치내용
               </span>
               <select
@@ -88,7 +88,7 @@ export default function ActionModal({
                     (e.target.value as (typeof ACTION_OPTIONS)[number] | "") ?? ""
                   )
                 }
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               >
                 <option value="" disabled>
                   선택하세요
@@ -101,14 +101,14 @@ export default function ActionModal({
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="mb-1 block text-sm font-medium text-zinc-600">
                 조치날짜
               </span>
               <input
                 type="date"
                 value={actionDate}
                 onChange={(e) => setActionDate(e.target.value)}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
             </label>
           </div>
@@ -116,14 +116,14 @@ export default function ActionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-zinc-300 bg-white py-3 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+              className="flex-1 rounded-xl border border-zinc-300 bg-white py-3 text-zinc-700"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
+              className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
             >
               {loading ? "저장 중…" : "저장"}
             </button>

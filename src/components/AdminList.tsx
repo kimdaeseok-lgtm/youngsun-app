@@ -10,16 +10,25 @@ export default function AdminList({ entries }: { entries: SheetEntry[] }) {
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-zinc-500 dark:text-zinc-400">
+      <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
+        <p className="text-zinc-500">
           조치 대기 중인 요청이 없습니다.
         </p>
-        <Link
-          href="/"
-          className="mt-4 inline-block text-sm text-zinc-600 underline dark:text-zinc-300"
-        >
-          메인으로
-        </Link>
+        <p className="mt-4">
+          <Link
+            href="/"
+            className="text-sm text-zinc-600 underline hover:text-zinc-700"
+          >
+            메인으로
+          </Link>
+          <span className="mx-2 text-zinc-400">·</span>
+          <a
+            href="/api/admin/logout"
+            className="text-sm text-zinc-600 underline hover:text-zinc-700"
+          >
+            로그아웃
+          </a>
+        </p>
       </div>
     );
   }
@@ -32,23 +41,23 @@ export default function AdminList({ entries }: { entries: SheetEntry[] }) {
             <button
               type="button"
               onClick={() => setModalEntry(entry)}
-              className="w-full rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:border-zinc-300 hover:shadow dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+              className="w-full rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:border-zinc-300 hover:shadow"
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-mono text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="font-mono text-sm text-zinc-500">
                   {entry.id}
                 </span>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="text-sm text-zinc-500">
                   {entry.requestDate}
                 </span>
-                <span className="font-medium text-zinc-800 dark:text-zinc-100">
+                <span className="font-medium text-zinc-800">
                   {entry.requester || "-"}
                 </span>
-                <span className="text-zinc-600 dark:text-zinc-300">
+                <span className="text-zinc-600">
                   {entry.location || "-"}
                 </span>
               </div>
-              <p className="mt-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="mt-2 line-clamp-2 text-sm text-zinc-600">
                 {entry.details || "-"}
               </p>
             </button>
@@ -68,10 +77,17 @@ export default function AdminList({ entries }: { entries: SheetEntry[] }) {
       <p className="mt-6 text-center">
         <Link
           href="/"
-          className="text-sm text-zinc-500 underline hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+          className="text-sm text-zinc-500 underline hover:text-zinc-700"
         >
           메인으로
         </Link>
+        <span className="mx-2 text-zinc-400">·</span>
+        <a
+          href="/api/admin/logout"
+          className="text-sm text-zinc-500 underline hover:text-zinc-700"
+        >
+          로그아웃
+        </a>
       </p>
     </>
   );

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
+import BackToCloseHandler from "@/components/BackToCloseHandler";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto max-w-lg px-4 py-4">
-          <h1 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
+    <div className="min-h-screen bg-white">
+      <BackToCloseHandler />
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-lg px-4 py-4 text-center">
+          <h1 className="text-3xl font-bold text-zinc-800">
             영선일지
           </h1>
         </div>
@@ -15,15 +17,15 @@ export default function Home() {
         <div className="flex flex-col gap-4">
           <Link
             href="/request"
-            className="flex min-h-[56px] items-center justify-center rounded-2xl bg-zinc-800 px-6 py-4 text-lg font-semibold text-white hover:bg-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="flex min-h-[56px] items-center justify-center rounded-2xl bg-blue-600 px-6 py-4 text-lg font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             영선 요청하기
           </Link>
           <Link
             href="/admin/login"
-            className="flex min-h-[56px] items-center justify-center rounded-2xl border border-zinc-200 bg-white px-6 py-4 text-lg font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+            className="flex min-h-[56px] items-center justify-center rounded-2xl bg-green-600 px-6 py-4 text-lg font-semibold text-white hover:bg-green-700"
           >
-            관리자 로그인
+            담당자 로그인
           </Link>
         </div>
         <div className="mt-10 flex flex-1 items-end justify-center pb-6">

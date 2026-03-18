@@ -32,13 +32,13 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto max-w-lg px-4 py-4">
-          <h1 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
-            관리자 로그인
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-lg px-4 py-4 text-center">
+          <h1 className="text-xl font-bold text-zinc-800">
+            담당자 로그인
           </h1>
-          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-0.5 text-sm text-zinc-500">
             비밀번호를 입력하세요.
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
       <main className="mx-auto max-w-lg px-4 py-12">
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
         >
           {error && (
             <div
@@ -66,13 +66,13 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호"
               autoComplete="current-password"
-              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
             />
           </label>
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 flex h-14 w-full items-center justify-center rounded-2xl bg-zinc-800 text-lg font-semibold text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="mt-4 flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "확인 중…" : "로그인"}
           </button>

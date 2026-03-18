@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   if (!expected) {
     return NextResponse.json(
-      { error: "관리자 비밀번호가 설정되지 않았습니다." },
+      { error: "담당자 비밀번호가 설정되지 않았습니다." },
       { status: 500 }
     );
   }
