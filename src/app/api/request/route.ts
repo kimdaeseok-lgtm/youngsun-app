@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { appendRequestRow } from "@/lib/sheets";
 import { sendNewRequestNotification } from "@/lib/email";
+import { sendNewRequestPushNotification } from "@/lib/push";
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -32,6 +33,12 @@ export async function POST(request: Request) {
         ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
         : "http://localhost:3000");
     const viewLink = baseUrl.replace(/\/$/, "");
+
+    try {
+      await sendNewRequestPushNotification({ viewLink });
+    } catch (pushErr) {
+      console.error("FCM push send failed:", pushErr);
+    }
 
     try {
       await sendNewRequestNotification(
