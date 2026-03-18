@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import type { SheetEntry } from "@/types/entry";
 import ActionModal from "./ActionModal";
+import PhotoModal from "./PhotoModal";
 
 export default function AdminList({ entries }: { entries: SheetEntry[] }) {
   const [modalEntry, setModalEntry] = useState<SheetEntry | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   if (entries.length === 0) {
     return (
@@ -60,6 +62,18 @@ export default function AdminList({ entries }: { entries: SheetEntry[] }) {
               <p className="mt-2 line-clamp-2 text-sm text-zinc-600">
                 {entry.details || "-"}
               </p>
+              {entry.requestPhotoUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPhotoUrl(entry.requestPhotoUrl);
+                  }}
+                  className="mt-3 inline-flex rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-200"
+                >
+                  사진 보기
+                </button>
+              )}
             </button>
           </li>
         ))}
@@ -72,6 +86,12 @@ export default function AdminList({ entries }: { entries: SheetEntry[] }) {
             setModalEntry(null);
             window.location.reload();
           }}
+        />
+      )}
+      {photoUrl && (
+        <PhotoModal
+          url={photoUrl}
+          onClose={() => setPhotoUrl(null)}
         />
       )}
       <p className="mt-6 text-center">

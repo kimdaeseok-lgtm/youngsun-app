@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { uploadRequestPhoto } from "@/lib/upload";
 
 export default function RequestPage() {
   const [loading, setLoading] = useState(false);
@@ -12,6 +13,7 @@ export default function RequestPage() {
     location: "",
     details: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +21,11 @@ export default function RequestPage() {
     setSuccess(false);
     setLoading(true);
     try {
-      const requestPhotoUrl = "";
+      let requestPhotoUrl = "";
+      const tempId = Math.random().toString(36).slice(2, 10);
+      if (photoFile) {
+        requestPhotoUrl = await uploadRequestPhoto(photoFile, tempId);
+      }
 
       const res = await fetch("/api/request", {
         method: "POST",
@@ -35,6 +41,7 @@ export default function RequestPage() {
       if (!res.ok) throw new Error(data.error ?? "요청 접수에 실패했습니다.");
 
       setForm({ requester: "", location: "", details: "" });
+      setPhotoFile(null);
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
@@ -125,6 +132,23 @@ export default function RequestPage() {
                 placeholder="요청 내용을 입력하세요"
                 className="min-h-[120px] w-full resize-y rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-zinc-600">
+                사진 (선택) · 모바일에서 카메라 촬영 가능
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium"
+              />
+              {photoFile && (
+                <p className="mt-2 text-sm text-zinc-500">
+                  선택: {photoFile.name}
+                </p>
+              )}
             </label>
           </div>
 
