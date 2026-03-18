@@ -30,15 +30,21 @@ function getSpreadsheetId(): string {
 }
 
 async function loadServiceAccountCredentials(): Promise<object> {
-  const rawEnv = (process.env.GOOGLE_SERVICE_ACCOUNT_JSON ?? "").trim();
-  if (rawEnv) {
-    try {
-      return JSON.parse(rawEnv) as object;
-    } catch {
-      throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is invalid JSON");
-    }
-  }
-  throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not set");
+  const projectId = (process.env.FIREBASE_PROJECT_ID ?? "").trim();
+  const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL ?? "").trim();
+  const privateKeyRaw = (process.env.FIREBASE_PRIVATE_KEY ?? "").trim();
+
+  if (!projectId) throw new Error("FIREBASE_PROJECT_ID is not set");
+  if (!clientEmail) throw new Error("FIREBASE_CLIENT_EMAIL is not set");
+  if (!privateKeyRaw) throw new Error("FIREBASE_PRIVATE_KEY is not set");
+
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  return {
+    type: "service_account",
+    project_id: projectId,
+    client_email: clientEmail,
+    private_key: privateKey,
+  };
 }
 
 async function getAuth() {
