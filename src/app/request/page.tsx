@@ -8,6 +8,7 @@ export default function RequestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [successDetail, setSuccessDetail] = useState("");
   const [form, setForm] = useState({
     requester: "",
     location: "",
@@ -44,6 +45,28 @@ export default function RequestPage() {
 
       setForm({ requester: "", location: "", details: "" });
       setPhotoFile(null);
+      if (data?.pushError) {
+        setSuccessDetail(`푸시 알림 전송 중 오류: ${String(data.pushError)}`);
+        setSuccess(true);
+        return;
+      }
+      if (data?.push?.attempted) {
+        const tokensCount = Number(data?.push?.tokensCount ?? 0);
+        const successCount = Number(data?.push?.successCount ?? 0);
+        const failureCount = Number(data?.push?.failureCount ?? 0);
+        const reasons =
+          Array.isArray(data?.push?.failureReasons) && data.push.failureReasons.length > 0
+            ? ` (실패 사유: ${data.push.failureReasons.join(", ")})`
+            : "";
+
+        setSuccessDetail(
+          failureCount > 0
+            ? `푸시 알림 전송 결과: 성공 ${successCount}/${tokensCount}, 실패 ${failureCount}${reasons}`
+            : `담당자에게 푸시 알림이 발송되었습니다. (성공 ${successCount}/${tokensCount})`
+        );
+      } else {
+        setSuccessDetail("요청이 접수되었습니다. (관리자 푸시 토큰이 설정되어 있으면 알림이 발송됩니다.)");
+      }
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
@@ -72,7 +95,7 @@ export default function RequestPage() {
               요청이 접수되었습니다.
             </p>
             <p className="mt-1 text-sm text-green-700">
-              담당자에게 메일 알림이 발송되었습니다.
+              {successDetail || "담당자에게 알림이 발송되었습니다."}
             </p>
           </div>
         )}

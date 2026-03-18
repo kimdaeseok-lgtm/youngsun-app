@@ -11,6 +11,19 @@ function getServiceAccountPath(): string {
 }
 
 async function loadServiceAccount(): Promise<admin.ServiceAccount> {
+  const rawEnv =
+    (process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON ?? "").trim() ||
+    (process.env.GOOGLE_SERVICE_ACCOUNT_JSON ?? "").trim();
+  if (rawEnv) {
+    try {
+      return JSON.parse(rawEnv) as admin.ServiceAccount;
+    } catch {
+      throw new Error(
+        "FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON (or GOOGLE_SERVICE_ACCOUNT_JSON) is invalid JSON"
+      );
+    }
+  }
+
   const p = getServiceAccountPath();
   const raw = await fs.readFile(p, "utf8");
   return JSON.parse(raw) as admin.ServiceAccount;

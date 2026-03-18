@@ -8,6 +8,9 @@ function generateId(): string {
 }
 
 export async function POST(request: Request) {
+  let push: Awaited<ReturnType<typeof sendNewRequestPushNotification>> | null =
+    null;
+  let pushError: string | null = null;
   try {
     const body = await request.json();
     const requester = String(body.requester ?? "").trim();
@@ -35,9 +38,10 @@ export async function POST(request: Request) {
     const viewLink = baseUrl.replace(/\/$/, "");
 
     try {
-      await sendNewRequestPushNotification({ viewLink });
+      push = await sendNewRequestPushNotification({ viewLink });
     } catch (pushErr) {
       console.error("FCM push send failed:", pushErr);
+      pushError = pushErr instanceof Error ? pushErr.message : "unknown";
     }
 
     try {
@@ -56,5 +60,5 @@ export async function POST(request: Request) {
       e instanceof Error ? e.message : "요청 접수에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, push, pushError });
 }

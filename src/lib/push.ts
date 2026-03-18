@@ -5,15 +5,29 @@ function parseAdminFcmTokens(): string[] {
   if (!raw) return [];
   return raw
     .split(/[\n,]+/g)
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/^["']|["']$/g, ""))
     .filter(Boolean);
 }
 
 export async function sendNewRequestPushNotification(params: {
   viewLink: string;
-}): Promise<void> {
+}): Promise<{
+  attempted: boolean;
+  tokensCount: number;
+  successCount: number;
+  failureCount: number;
+  failureReasons: string[];
+}> {
   const tokens = parseAdminFcmTokens();
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) {
+    return {
+      attempted: false,
+      tokensCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      failureReasons: [],
+    };
+  }
 
   const app = await getFirebaseAdminApp();
   const messaging = app.messaging();
@@ -52,5 +66,17 @@ export async function sendNewRequestPushNotification(params: {
     });
     console.warn("FCM multicast failures:", failed);
   }
+
+  const failureReasons = res.responses
+    .filter((r) => !r.success)
+    .map((r) => r.error?.message ?? "unknown");
+
+  return {
+    attempted: true,
+    tokensCount: tokens.length,
+    successCount: res.successCount,
+    failureCount: res.failureCount,
+    failureReasons: Array.from(new Set(failureReasons)).slice(0, 5),
+  };
 }
 
