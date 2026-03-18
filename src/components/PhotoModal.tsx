@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface PhotoModalProps {
   url: string;
   onClose: () => void;
@@ -20,9 +22,12 @@ export default function PhotoModal({ url, onClose }: PhotoModalProps) {
           닫기
         </button>
         <div className="flex items-center justify-center bg-black">
-          <img
+          <Image
             src={url}
             alt="요청 사진"
+            width={1200}
+            height={1200}
+            unoptimized
             className="max-h-[80vh] w-auto object-contain"
           />
         </div>

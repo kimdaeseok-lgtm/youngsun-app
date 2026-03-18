@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getEntries, getPendingEntries } from "@/lib/sheets";
 import AdminList from "@/components/AdminList";
+import FcmTokenLogger from "@/components/FcmTokenLogger";
 
 export const metadata = {
   title: "담당자 관리 | 영선일지",
@@ -27,6 +28,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="mx-auto max-w-4xl px-4 py-6">
+        <FcmTokenLogger />
         <AdminList entries={pending} />
       </main>
     </div>
