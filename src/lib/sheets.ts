@@ -1,7 +1,5 @@
 import { google } from "googleapis";
 import type { SheetEntry } from "@/types/entry";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 
 function hasSheetPrefix(range: string): boolean {
   return range.includes("!");
@@ -40,21 +38,7 @@ async function loadServiceAccountCredentials(): Promise<object> {
       throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is invalid JSON");
     }
   }
-
-  const keyPath =
-    (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH ?? "").trim() ||
-    path.join(process.cwd(), "youngsun-app-key.json");
-
-  try {
-    const file = await fs.readFile(keyPath, "utf8");
-    return JSON.parse(file) as object;
-  } catch (e) {
-    const msg =
-      e instanceof Error ? e.message : "Failed to read service account key";
-    throw new Error(
-      `Service account key not found/readable. Tried: ${keyPath}. ${msg}`
-    );
-  }
+  throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not set");
 }
 
 async function getAuth() {
