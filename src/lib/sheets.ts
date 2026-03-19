@@ -30,22 +30,21 @@ function getSpreadsheetId(): string {
 }
 
 async function loadServiceAccountCredentials(): Promise<object> {
-  const projectId = (process.env.GOOGLE_PROJECT_ID ?? "").trim();
   const clientEmail = (process.env.GOOGLE_CLIENT_EMAIL ?? "").trim();
   const privateKeyRaw = (process.env.GOOGLE_PRIVATE_KEY ?? "").trim();
 
-  if (!projectId) throw new Error("GOOGLE_PROJECT_ID is not set");
   if (!clientEmail) throw new Error("GOOGLE_CLIENT_EMAIL is not set");
   if (!privateKeyRaw) throw new Error("GOOGLE_PRIVATE_KEY is not set");
 
-  const trimmed = privateKeyRaw.trim().replace(/^["']|["']$/g, "");
-  const withNewlines = trimmed.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
-  const escaped = withNewlines
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/\r/g, "\\r")
-    .replace(/\n/g, "\\n");
-  const privateKey = JSON.parse(`"${escaped}"`) as string;
+  const projectIdFromEmail =
+    clientEmail.match(/@([^.]+(?:-[^.]+)*)\.iam\.gserviceaccount\.com$/)?.[1] ?? "";
+  const projectId = (process.env.GOOGLE_PROJECT_ID ?? "").trim() || projectIdFromEmail;
+  if (!projectId) throw new Error("GOOGLE_PROJECT_ID is not set");
+
+  const privateKey = privateKeyRaw
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\\n/g, "\n");
   return {
     type: "service_account",
     project_id: projectId,
