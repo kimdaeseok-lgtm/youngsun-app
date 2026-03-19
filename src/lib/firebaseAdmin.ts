@@ -1,6 +1,19 @@
 import admin from "firebase-admin";
 import type { Bucket } from "@google-cloud/storage";
 
+function decodePrivateKeyFromEnv(raw: string): string {
+  // \n 처리 가장 확실한 방법: JSON string decoding
+  // - raw가 이미 실제 개행을 포함해도, JSON.parse로 정상 복원되도록 이스케이프 처리
+  const escaped = raw
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n");
+  return JSON.parse(`"${escaped}"`) as string;
+}
+
 function getEnvServiceAccount(): {
   projectId: string;
   clientEmail: string;
@@ -13,8 +26,7 @@ function getEnvServiceAccount(): {
   if (!clientEmail) throw new Error("FIREBASE_CLIENT_EMAIL is not set");
   if (!privateKeyRaw) throw new Error("FIREBASE_PRIVATE_KEY is not set");
 
-  // Vercel/CI에서는 개행이 '\\n'으로 들어오는 경우가 많음
-  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  const privateKey = decodePrivateKeyFromEnv(privateKeyRaw);
   return { projectId, clientEmail, privateKey };
 }
 

@@ -38,7 +38,14 @@ async function loadServiceAccountCredentials(): Promise<object> {
   if (!clientEmail) throw new Error("FIREBASE_CLIENT_EMAIL is not set");
   if (!privateKeyRaw) throw new Error("FIREBASE_PRIVATE_KEY is not set");
 
-  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  const escaped = privateKeyRaw
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n");
+  const privateKey = JSON.parse(`"${escaped}"`) as string;
   return {
     type: "service_account",
     project_id: projectId,
