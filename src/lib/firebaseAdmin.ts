@@ -1,12 +1,14 @@
 import admin from "firebase-admin";
 import type { Bucket } from "@google-cloud/storage";
 
+/** Firebase Admin SDK는 FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY 3개 env로만 초기화합니다. */
 function decodePrivateKeyFromEnv(raw: string): string {
-  // \n 처리 가장 확실한 방법: JSON string decoding
-  // - raw가 이미 실제 개행을 포함해도, JSON.parse로 정상 복원되도록 이스케이프 처리
-  const escaped = raw
-    .trim()
-    .replace(/^["']|["']$/g, "")
+  // Vercel: 값에 리터럴 \n(백슬래시+n) 또는 실제 개행이 올 수 있음. JSON.parse로 확실히 복원.
+  const trimmed = raw.trim().replace(/^["']|["']$/g, "");
+  // 1) 리터럴 \n, \r을 실제 개행으로 (env에 \n 형태로 넣은 경우)
+  const withNewlines = trimmed.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
+  // 2) JSON 문자열로 이스케이프 후 파싱 → PEM에 필요한 실제 \n 확보
+  const escaped = withNewlines
     .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"')
     .replace(/\r/g, "\\r")
