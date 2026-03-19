@@ -6,6 +6,7 @@ import { uploadRequestPhoto } from "@/lib/upload";
 
 export default function RequestPage() {
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [successDetail, setSuccessDetail] = useState("");
@@ -27,7 +28,10 @@ export default function RequestPage() {
       let requestPhotoUrl = "";
       const tempId = Math.random().toString(36).slice(2, 10);
       if (photoFile) {
-        requestPhotoUrl = await uploadRequestPhoto(photoFile, tempId);
+        requestPhotoUrl = await uploadRequestPhoto(photoFile, tempId, {
+          onCompressionStart: () => setCompressing(true),
+          onCompressionEnd: () => setCompressing(false),
+        });
       }
 
       const res = await fetch("/api/request", {
@@ -45,32 +49,22 @@ export default function RequestPage() {
 
       setForm({ requester: "", location: "", details: "" });
       setPhotoFile(null);
-      if (data?.pushError) {
-        setSuccessDetail(`푸시 알림 전송 중 오류: ${String(data.pushError)}`);
-        setSuccess(true);
-        return;
-      }
-      if (data?.push?.attempted) {
-        const tokensCount = Number(data?.push?.tokensCount ?? 0);
-        const successCount = Number(data?.push?.successCount ?? 0);
-        const failureCount = Number(data?.push?.failureCount ?? 0);
-        const reasons =
-          Array.isArray(data?.push?.failureReasons) && data.push.failureReasons.length > 0
-            ? ` (실패 사유: ${data.push.failureReasons.join(", ")})`
-            : "";
-
+      if (data?.chat?.attempted) {
         setSuccessDetail(
-          failureCount > 0
-            ? `푸시 알림 전송 결과: 성공 ${successCount}/${tokensCount}, 실패 ${failureCount}${reasons}`
-            : `담당자에게 푸시 알림이 발송되었습니다. (성공 ${successCount}/${tokensCount})`
+          data?.chat?.ok
+            ? "요청이 접수되었고 Google Chat 알림이 전송되었습니다."
+            : `요청은 접수되었지만 Google Chat 알림 전송에 실패했습니다. ${data?.chat?.error ?? ""}`
         );
       } else {
-        setSuccessDetail("요청이 접수되었습니다. (관리자 푸시 토큰이 설정되어 있으면 알림이 발송됩니다.)");
+        setSuccessDetail(
+          "요청이 접수되었습니다. (GOOGLE_CHAT_WEBHOOK_URL 설정 시 알림이 전송됩니다.)"
+        );
       }
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
+      setCompressing(false);
       setLoading(false);
     }
   };
@@ -218,6 +212,11 @@ export default function RequestPage() {
           >
             {loading ? "접수 중…" : "요청 제출"}
           </button>
+          {compressing && (
+            <p className="mt-2 text-center text-sm text-zinc-500">
+              이미지 압축 중...
+            </p>
+          )}
         </form>
 
         <p className="mt-6 text-center">

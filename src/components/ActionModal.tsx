@@ -17,6 +17,7 @@ export default function ActionModal({
   onSuccess: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [error, setError] = useState("");
   const [actionContent, setActionContent] = useState<(typeof ACTION_OPTIONS)[number] | "">("");
   const [actionDate, setActionDate] = useState(today());
@@ -29,7 +30,10 @@ export default function ActionModal({
     try {
       let actionPhotoUrl = "";
       if (photoFile) {
-        actionPhotoUrl = await uploadActionPhoto(photoFile, entry.id);
+        actionPhotoUrl = await uploadActionPhoto(photoFile, entry.id, {
+          onCompressionStart: () => setCompressing(true),
+          onCompressionEnd: () => setCompressing(false),
+        });
       }
 
       const res = await fetch(`/api/entries/${entry.id}/action`, {
@@ -48,6 +52,7 @@ export default function ActionModal({
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
+      setCompressing(false);
       setLoading(false);
     }
   };
@@ -150,6 +155,11 @@ export default function ActionModal({
               {loading ? "저장 중…" : "저장"}
             </button>
           </div>
+          {compressing && (
+            <p className="mt-3 text-center text-sm text-zinc-500">
+              이미지 압축 중...
+            </p>
+          )}
         </form>
       </div>
     </div>

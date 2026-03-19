@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import { appendRequestRow } from "@/lib/sheets";
-import { sendNewRequestNotification } from "@/lib/email";
-import { sendNewRequestPushNotification } from "@/lib/push";
+import { sendGoogleChatNewRequestMessage } from "@/lib/googleChat";
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
 export async function POST(request: Request) {
-  let push: Awaited<ReturnType<typeof sendNewRequestPushNotification>> | null =
+  let chat: Awaited<ReturnType<typeof sendGoogleChatNewRequestMessage>> | null =
     null;
-  let pushError: string | null = null;
   try {
     const body = await request.json();
     const requester = String(body.requester ?? "").trim();
@@ -35,30 +33,23 @@ export async function POST(request: Request) {
       (request.headers.get("x-forwarded-proto") && request.headers.get("host")
         ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get("host")}`
         : "http://localhost:3000");
-    const viewLink = baseUrl.replace(/\/$/, "");
+    const adminLink = `${baseUrl.replace(/\/$/, "")}/admin`;
 
     try {
-      push = await sendNewRequestPushNotification({ viewLink });
-    } catch (pushErr) {
-      console.error("FCM push send failed:", pushErr);
-      pushError = pushErr instanceof Error ? pushErr.message : "unknown";
-    }
-
-    try {
-      await sendNewRequestNotification(
+      chat = await sendGoogleChatNewRequestMessage({
         requester,
         location,
         details,
         requestPhotoUrl,
-        viewLink
-      );
-    } catch (mailErr) {
-      console.error("Email send failed:", mailErr);
+        adminLink,
+      });
+    } catch (chatErr) {
+      console.error("Google Chat send failed:", chatErr);
     }
   } catch (e) {
     const message =
       e instanceof Error ? e.message : "요청 접수에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, push, pushError });
+  return NextResponse.json({ ok: true, chat });
 }

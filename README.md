@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Setup
+
+- Required env checklist: [`REQUIRED_ENV.md`](./REQUIRED_ENV.md)
+- Detailed setup guide: [`ENV_SETUP.md`](./ENV_SETUP.md)
+
 ## Getting Started
 
 First, run the development server:

@@ -30,13 +30,13 @@ function getSpreadsheetId(): string {
 }
 
 async function loadServiceAccountCredentials(): Promise<object> {
-  const projectId = (process.env.FIREBASE_PROJECT_ID ?? "").trim();
-  const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL ?? "").trim();
-  const privateKeyRaw = (process.env.FIREBASE_PRIVATE_KEY ?? "").trim();
+  const projectId = (process.env.GOOGLE_PROJECT_ID ?? "").trim();
+  const clientEmail = (process.env.GOOGLE_CLIENT_EMAIL ?? "").trim();
+  const privateKeyRaw = (process.env.GOOGLE_PRIVATE_KEY ?? "").trim();
 
-  if (!projectId) throw new Error("FIREBASE_PROJECT_ID is not set");
-  if (!clientEmail) throw new Error("FIREBASE_CLIENT_EMAIL is not set");
-  if (!privateKeyRaw) throw new Error("FIREBASE_PRIVATE_KEY is not set");
+  if (!projectId) throw new Error("GOOGLE_PROJECT_ID is not set");
+  if (!clientEmail) throw new Error("GOOGLE_CLIENT_EMAIL is not set");
+  if (!privateKeyRaw) throw new Error("GOOGLE_PRIVATE_KEY is not set");
 
   const trimmed = privateKeyRaw.trim().replace(/^["']|["']$/g, "");
   const withNewlines = trimmed.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
