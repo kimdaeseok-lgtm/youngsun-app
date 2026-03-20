@@ -1,5 +1,13 @@
 # Firebase Storage (사진 업로드)
 
+## `Firebase: Error (auth/configuration-not-found)`
+
+Firebase 콘솔에서 **Authentication** 메뉴에 들어가 **시작(사용 설정)** 을 한 번 해 주세요.  
+익명 로그인을 쓰려면 **Sign-in method → 익명** 을 켭니다.  
+(앱은 익명 실패 시 Storage 공개 규칙이면 그대로 업로드를 시도합니다.)
+
+---
+
 업로드가 **오래 걸리다 타임아웃**되거나 **거부**되면 아래를 확인하세요.
 
 ## 1. 환경 변수

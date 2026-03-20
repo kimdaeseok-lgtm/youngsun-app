@@ -53,9 +53,11 @@ export async function ensureAnonymousAuthForStorage(): Promise<void> {
       e && typeof e === "object" && "code" in e
         ? String((e as { code: string }).code)
         : "";
+    // Authentication 미사용·익명 미설정·콘솔에서 Auth 미활성화 시 → Storage만 공개 쓰기면 업로드 가능
     if (
       code === "auth/operation-not-allowed" ||
-      code === "auth/admin-restricted-operation"
+      code === "auth/admin-restricted-operation" ||
+      code === "auth/configuration-not-found"
     ) {
       return;
     }

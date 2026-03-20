@@ -182,11 +182,18 @@ export default function ActionModal({ entry, onClose }: ActionModalProps) {
               disabled={loading}
               className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white disabled:opacity-50"
             >
-              {loading ? "저장 중…" : "저장"}
+              {loading ? (compressing ? "압축 중..." : "저장 중…") : "저장"}
             </button>
           </div>
           {compressing && (
-            <p className="text-center text-sm text-zinc-500">이미지 압축 중…</p>
+            <p
+              className="mt-2 flex items-center justify-center gap-2 text-center text-sm font-medium text-zinc-700"
+              role="status"
+              aria-live="polite"
+            >
+              <span className="inline-block size-4 animate-spin rounded-full border-2 border-zinc-600 border-t-transparent" />
+              압축 중...
+            </p>
           )}
         </form>
       </div>

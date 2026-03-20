@@ -196,7 +196,7 @@ export default function RequestPage() {
           >
             {loading
               ? progress === "compress"
-                ? "사진 압축 중…"
+                ? "압축 중..."
                 : progress === "upload"
                   ? "사진 업로드 중…"
                   : progress === "submit"
@@ -204,9 +204,18 @@ export default function RequestPage() {
                     : "접수 중…"
               : "요청 제출"}
           </button>
-          {loading && progress && (
+          {loading && progress === "compress" && (
+            <p
+              className="mt-3 flex items-center justify-center gap-2 text-center text-sm font-medium text-blue-700"
+              role="status"
+              aria-live="polite"
+            >
+              <span className="inline-block size-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              압축 중...
+            </p>
+          )}
+          {loading && progress && progress !== "compress" && (
             <p className="mt-2 text-center text-sm text-zinc-500">
-              {progress === "compress" && "이미지를 줄이는 중입니다. 잠시만 기다려 주세요."}
               {progress === "upload" && "Firebase에 사진을 올리는 중입니다."}
               {progress === "submit" && "서버에 요청을 등록하는 중입니다."}
             </p>

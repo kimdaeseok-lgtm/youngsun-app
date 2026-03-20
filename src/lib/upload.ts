@@ -14,14 +14,12 @@ import {
 
 const BUCKET_PREFIX = "youngsun";
 
+/** 업로드 전 항상 적용: 최대 ~1MB, 긴 변 최대 1280px (모바일 WebView는 워커 이슈로 main 스레드 압축) */
 const COMPRESSION_OPTIONS = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1280,
   useWebWorker: false,
 } as const;
-
-/** 작은 파일은 압축 생략(속도·호환성) */
-const SKIP_COMPRESS_MAX_BYTES = 900 * 1024;
 
 const COMPRESS_TIMEOUT_MS = 45_000;
 const FIREBASE_TIMEOUT_MS = 90_000;
@@ -74,10 +72,8 @@ async function compressImageSafely(file: File): Promise<File> {
   }
 }
 
-async function prepareImageFile(file: File): Promise<File> {
-  if (file.size <= SKIP_COMPRESS_MAX_BYTES) {
-    return file;
-  }
+/** 업로드 직전 항상 browser-image-compression 적용 */
+async function compressForUpload(file: File): Promise<File> {
   return compressImageSafely(file);
 }
 
@@ -147,9 +143,9 @@ export async function uploadRequestPhoto(
   let prepared: File;
   try {
     prepared = await withTimeout(
-      prepareImageFile(file),
+      compressForUpload(file),
       COMPRESS_TIMEOUT_MS,
-      "이미지 처리 "
+      "이미지 압축 "
     );
   } finally {
     options?.onCompressionEnd?.();
@@ -171,9 +167,9 @@ export async function uploadActionPhoto(
   let prepared: File;
   try {
     prepared = await withTimeout(
-      prepareImageFile(file),
+      compressForUpload(file),
       COMPRESS_TIMEOUT_MS,
-      "이미지 처리 "
+      "이미지 압축 "
     );
   } finally {
     options?.onCompressionEnd?.();
