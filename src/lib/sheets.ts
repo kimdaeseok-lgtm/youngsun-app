@@ -1,12 +1,7 @@
 import { google } from "googleapis";
 import type { SheetEntry } from "@/types/entry";
 
-function hasSheetPrefix(range: string): boolean {
-  return range.includes("!");
-}
-
 function quoteSheetNameIfNeeded(sheetName: string): string {
-  // Always quote to safely handle spaces/special chars.
   const escaped = sheetName.replace(/'/g, "''");
   return `'${escaped}'`;
 }
@@ -14,9 +9,7 @@ function quoteSheetNameIfNeeded(sheetName: string): string {
 function extractSpreadsheetId(input: string): string | null {
   const raw = (input ?? "").trim();
   if (!raw) return null;
-  // If already looks like an ID (no slashes), accept it.
   if (!raw.includes("/") && raw.length >= 10) return raw;
-  // Typical URL: https://docs.google.com/spreadsheets/d/{ID}/edit...
   const m = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return m?.[1] ?? null;
 }
@@ -37,14 +30,17 @@ async function loadServiceAccountCredentials(): Promise<object> {
   if (!privateKeyRaw) throw new Error("GOOGLE_PRIVATE_KEY is not set");
 
   const projectIdFromEmail =
-    clientEmail.match(/@([^.]+(?:-[^.]+)*)\.iam\.gserviceaccount\.com$/)?.[1] ?? "";
-  const projectId = (process.env.GOOGLE_PROJECT_ID ?? "").trim() || projectIdFromEmail;
+    clientEmail.match(/@([^.]+(?:-[^.]+)*)\.iam\.gserviceaccount\.com$/)?.[1] ??
+    "";
+  const projectId =
+    (process.env.GOOGLE_PROJECT_ID ?? "").trim() || projectIdFromEmail;
   if (!projectId) throw new Error("GOOGLE_PROJECT_ID is not set");
 
   const privateKey = privateKeyRaw
     .trim()
     .replace(/^["']|["']$/g, "")
     .replace(/\\n/g, "\n");
+
   return {
     type: "service_account",
     project_id: projectId,
@@ -61,7 +57,10 @@ async function getAuth() {
   });
 }
 
-async function getSheetName(spreadsheetId: string, auth: unknown): Promise<string> {
+async function getSheetName(
+  spreadsheetId: string,
+  auth: unknown
+): Promise<string> {
   const envName = (process.env.GOOGLE_SHEETS_SHEET_NAME ?? "").trim();
   if (envName) return envName;
 
@@ -70,23 +69,10 @@ async function getSheetName(spreadsheetId: string, auth: unknown): Promise<strin
     spreadsheetId,
     fields: "sheets(properties(title))",
   });
-  const title =
-    meta.data.sheets?.[0]?.properties?.title?.trim() ||
-    "Sheet1";
-  return title;
+  return meta.data.sheets?.[0]?.properties?.title?.trim() || "Sheet1";
 }
 
-async function normalizeRange(
-  spreadsheetId: string,
-  auth: unknown,
-  range: string
-): Promise<string> {
-  const raw = range.trim();
-  if (hasSheetPrefix(raw)) return raw;
-  const sheetName = await getSheetName(spreadsheetId, auth);
-  return `${quoteSheetNameIfNeeded(sheetName)}!${raw}`;
-}
-
+/** A~J: 연번, 요청날짜, 요청자, 요청장소, 요청내용, 요청사항사진, 조치사항, 조치날짜, 비고, 사진보기 */
 function rowToEntry(row: string[]): SheetEntry {
   return {
     id: row[0] ?? "",
@@ -96,14 +82,12 @@ function rowToEntry(row: string[]): SheetEntry {
     details: row[4] ?? "",
     requestPhotoUrl: row[5] ?? "",
     actionTaken: row[6] ?? "",
-    actionPhotoUrl: row[7] ?? "",
-    actionDate: row[8] ?? "",
+    actionDate: row[7] ?? "",
+    remarks: row[8] ?? "",
+    photoView: row[9] ?? "",
   };
 }
 
-/**
- * 시트 전체 목록 조회 (2행부터, 헤더 제외)
- */
 export async function getEntries(): Promise<SheetEntry[]> {
   const spreadsheetId = getSpreadsheetId();
   const auth = await getAuth();
@@ -117,22 +101,18 @@ export async function getEntries(): Promise<SheetEntry[]> {
   return rows
     .map((row) => rowToEntry(row))
     .filter((e) => {
-      const requester = (e.requester ?? "").trim();
-      const location = (e.location ?? "").trim();
-      const details = (e.details ?? "").trim();
-      // 요청자/장소/내용이 모두 비어있는 행(테스트/시스템용)은 앱 목록에서 제외
-      return Boolean(requester || location || details);
+      const r = (e.requester ?? "").trim();
+      const l = (e.location ?? "").trim();
+      const d = (e.details ?? "").trim();
+      return Boolean(r || l || d);
     });
 }
 
-/** G열(조치사항)이 비어 있는 항목만 */
+/** G열(조치사항)이 비어 있는 항목 */
 export function getPendingEntries(entries: SheetEntry[]): SheetEntry[] {
   return entries.filter((e) => !(e.actionTaken ?? "").trim());
 }
 
-/**
- * 연번(id)으로 시트 행 번호 찾기 (1-based)
- */
 export async function findRowIndexById(id: string): Promise<number | null> {
   const spreadsheetId = getSpreadsheetId();
   const auth = await getAuth();
@@ -149,13 +129,14 @@ export async function findRowIndexById(id: string): Promise<number | null> {
 }
 
 /**
- * 해당 행의 G(조치내용), H(조치후사진), I(조치날짜) 업데이트
+ * G=조치사항, H=조치날짜, I=비고, J=사진보기(조치 후 사진 URL)
  */
 export async function updateRowAction(
   rowIndex: number,
   actionContent: string,
-  actionPhotoUrl: string,
-  actionDate: string
+  actionDate: string,
+  remarks: string,
+  actionPhotoUrl: string
 ): Promise<void> {
   const spreadsheetId = getSpreadsheetId();
   const auth = await getAuth();
@@ -168,16 +149,14 @@ export async function updateRowAction(
       valueInputOption: "USER_ENTERED",
       data: [
         { range: `${prefix}!G${rowIndex}`, values: [[actionContent]] },
-        { range: `${prefix}!H${rowIndex}`, values: [[actionPhotoUrl]] },
-        { range: `${prefix}!I${rowIndex}`, values: [[actionDate]] },
+        { range: `${prefix}!H${rowIndex}`, values: [[actionDate]] },
+        { range: `${prefix}!I${rowIndex}`, values: [[remarks]] },
+        { range: `${prefix}!J${rowIndex}`, values: [[actionPhotoUrl]] },
       ],
     },
   });
 }
 
-/**
- * 시트 행: A=연번, B=요청날짜, C=요청자, D=요청장소, E=요청내용, F=요청사항사진, G=조치사항, H=조치사항사진, I=조치날짜, J=사진보기
- */
 export async function appendRequestRow(entry: {
   id: string;
   requestDate: string;
@@ -190,6 +169,7 @@ export async function appendRequestRow(entry: {
   const auth = await getAuth();
   const sheets = google.sheets({ version: "v4", auth });
   const sheetName = await getSheetName(spreadsheetId, auth);
+  const photoView = entry.requestPhotoUrl || "";
   const row = [
     entry.id,
     entry.requestDate,
@@ -197,71 +177,15 @@ export async function appendRequestRow(entry: {
     entry.location,
     entry.details,
     entry.requestPhotoUrl,
-    "", // G 조치사항
-    "", // H 조치사항사진
-    "", // I 조치날짜
-    "", // J 사진보기
+    "",
+    "",
+    "",
+    photoView,
   ];
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range: `${quoteSheetNameIfNeeded(sheetName)}!A:J`,
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [row] },
-  });
-}
-
-/**
- * 기본 읽기 함수: A1 표기 range를 그대로 받습니다.
- * 예) readValues(\"Sheet1!A2:J\")
- */
-export async function readValues(range: string): Promise<string[][]> {
-  const spreadsheetId = getSpreadsheetId();
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-  const normalized = await normalizeRange(spreadsheetId, auth, range);
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: normalized,
-  });
-  return (res.data.values ?? []) as string[][];
-}
-
-/**
- * 기본 쓰기 함수(덮어쓰기): 범위에 values를 씁니다.
- * 예) writeValues(\"Sheet1!G10:I10\", [[\"조치\", \"url\", \"2026-03-17\"]])
- */
-export async function writeValues(
-  range: string,
-  values: (string | number | boolean | null)[][]
-): Promise<void> {
-  const spreadsheetId = getSpreadsheetId();
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-  const normalized = await normalizeRange(spreadsheetId, auth, range);
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: normalized,
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values },
-  });
-}
-
-/**
- * 기본 추가 함수(append): range 기준으로 뒤에 행이 추가됩니다.
- * 예) appendValues(\"Sheet1!A:J\", [[...row]])
- */
-export async function appendValues(
-  range: string,
-  values: (string | number | boolean | null)[][]
-): Promise<void> {
-  const spreadsheetId = getSpreadsheetId();
-  const auth = await getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-  const normalized = await normalizeRange(spreadsheetId, auth, range);
-  await sheets.spreadsheets.values.append({
-    spreadsheetId,
-    range: normalized,
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values },
   });
 }

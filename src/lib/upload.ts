@@ -1,8 +1,8 @@
 "use client";
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
-import { getFirebaseStorage } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirebaseStorage } from "@/firebase/clientApp";
 
 const BUCKET_PREFIX = "youngsun";
 const COMPRESSION_OPTIONS = {
@@ -26,7 +26,9 @@ export async function uploadRequestPhoto(
   options?: UploadOptions
 ): Promise<string> {
   const storage = getFirebaseStorage();
-  if (!storage) throw new Error("Firebase가 설정되지 않았습니다. .env.local을 확인하세요.");
+  if (!storage) {
+    throw new Error("Firebase가 설정되지 않았습니다. NEXT_PUBLIC_FIREBASE_* 를 확인하세요.");
+  }
   options?.onCompressionStart?.();
   let compressed: File;
   try {
@@ -47,7 +49,9 @@ export async function uploadActionPhoto(
   options?: UploadOptions
 ): Promise<string> {
   const storage = getFirebaseStorage();
-  if (!storage) throw new Error("Firebase가 설정되지 않았습니다. .env.local을 확인하세요.");
+  if (!storage) {
+    throw new Error("Firebase가 설정되지 않았습니다. NEXT_PUBLIC_FIREBASE_* 를 확인하세요.");
+  }
   options?.onCompressionStart?.();
   let compressed: File;
   try {
@@ -61,4 +65,3 @@ export async function uploadActionPhoto(
   await uploadBytes(storageRef, compressed);
   return getDownloadURL(storageRef);
 }
-

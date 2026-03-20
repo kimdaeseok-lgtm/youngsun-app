@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getEntries, getPendingEntries } from "@/lib/sheets";
+import { getEntries } from "@/lib/sheets";
 import AdminList from "@/components/AdminList";
 
 export const metadata = {
-  title: "담당자 관리 | 영선일지",
-  description: "영선일지 조치 관리",
+  title: "담당자 | 영선일지",
 };
 
 export const dynamic = "force-dynamic";
@@ -20,14 +19,15 @@ export default async function AdminPage() {
   try {
     entries = await getEntries();
   } catch {
-    // env 미설정 시 빈 목록
+    // env 미설정
   }
-  const pending = getPendingEntries(entries).slice(-10).reverse();
+  /** 시트에 마지막 행이 최신이므로 역순으로 표시 */
+  const newestFirst = [...entries].reverse();
 
   return (
     <div className="min-h-screen bg-white">
       <main className="mx-auto max-w-4xl px-4 py-6">
-        <AdminList entries={pending} />
+        <AdminList entries={newestFirst} />
       </main>
     </div>
   );

@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { findRowIndexById, updateRowAction } from "@/lib/sheets";
 
 export async function PATCH(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const cookieStore = await cookies();
+  if (cookieStore.get("admin_session")?.value !== "1") {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
-    const body = await _request.json();
+    const body = await request.json();
     const actionContent = String(body.actionContent ?? "").trim();
     const actionPhotoUrl = String(body.actionPhotoUrl ?? "").trim();
-    const actionDate = String(body.actionDate ?? "").trim() || new Date().toISOString().slice(0, 10);
+    const remarks = String(body.remarks ?? "").trim();
+    const actionDate =
+      String(body.actionDate ?? "").trim() ||
+      new Date().toISOString().slice(0, 10);
 
     const rowIndex = await findRowIndexById(id);
     if (rowIndex == null) {
@@ -20,7 +29,13 @@ export async function PATCH(
       );
     }
 
-    await updateRowAction(rowIndex, actionContent, actionPhotoUrl, actionDate);
+    await updateRowAction(
+      rowIndex,
+      actionContent,
+      actionDate,
+      remarks,
+      actionPhotoUrl
+    );
     return NextResponse.json({ ok: true });
   } catch (e) {
     const message =

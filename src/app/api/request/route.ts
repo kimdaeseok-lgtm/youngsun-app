@@ -43,8 +43,8 @@ export async function POST(request: Request) {
         requestPhotoUrl,
         adminLink,
       });
-    } catch (chatErr) {
-      console.error("Google Chat send failed:", chatErr);
+    } catch (e) {
+      console.error("Google Chat send failed:", e);
     }
   } catch (e) {
     const message =

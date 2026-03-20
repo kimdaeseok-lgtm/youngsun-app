@@ -73,9 +73,7 @@ export default function RequestPage() {
     <div className="min-h-screen bg-white">
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-lg px-4 py-4 text-center">
-          <h1 className="text-3xl font-bold text-zinc-800">
-            영선 요청
-          </h1>
+          <h1 className="text-3xl font-bold text-zinc-800">영선 요청</h1>
         </div>
       </header>
 
@@ -85,11 +83,9 @@ export default function RequestPage() {
             role="alert"
             className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-5"
           >
-            <p className="font-medium text-green-800">
-              요청이 접수되었습니다.
-            </p>
+            <p className="font-medium text-green-800">요청이 접수되었습니다.</p>
             <p className="mt-1 text-sm text-green-700">
-              {successDetail || "담당자에게 알림이 발송되었습니다."}
+              {successDetail || "담당자에게 알림이 전송되었습니다."}
             </p>
           </div>
         )}
@@ -118,14 +114,12 @@ export default function RequestPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, requester: e.target.value }))
                 }
-                placeholder="예: 박경수, 201호"
                 className="min-h-[48px] w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
             </label>
-
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-zinc-600">
-                장소
+                요청장소
               </span>
               <input
                 type="text"
@@ -133,14 +127,12 @@ export default function RequestPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, location: e.target.value }))
                 }
-                placeholder="예: 2층 건조기, 별관2호"
                 className="min-h-[48px] w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
             </label>
-
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-zinc-600">
-                내용
+                요청내용
               </span>
               <textarea
                 value={form.details}
@@ -148,32 +140,29 @@ export default function RequestPage() {
                   setForm((f) => ({ ...f, details: e.target.value }))
                 }
                 rows={4}
-                placeholder="요청 내용을 입력하세요"
                 className="min-h-[120px] w-full resize-y rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-zinc-600">
-                사진 (선택)
+                요청사항사진 (선택)
               </span>
-
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium"
                 >
-                  카메라 촬영
+                  카메라
                 </button>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-zinc-300 bg-white text-sm font-medium"
                 >
                   파일 선택
                 </button>
               </div>
-
               <input
                 ref={cameraInputRef}
                 type="file"
@@ -189,18 +178,8 @@ export default function RequestPage() {
                 onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
                 className="hidden"
               />
-
               {photoFile && (
-                <div className="mt-2 flex items-center justify-between gap-3 text-sm text-zinc-500">
-                  선택: {photoFile.name}
-                  <button
-                    type="button"
-                    onClick={() => setPhotoFile(null)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-sm text-zinc-600 underline hover:text-zinc-800"
-                  >
-                    제거
-                  </button>
-                </div>
+                <p className="mt-2 text-sm text-zinc-500">{photoFile.name}</p>
               )}
             </label>
           </div>
@@ -208,7 +187,7 @@ export default function RequestPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-8 flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="mt-8 flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white disabled:opacity-50"
           >
             {loading ? "접수 중…" : "요청 제출"}
           </button>
@@ -220,10 +199,7 @@ export default function RequestPage() {
         </form>
 
         <p className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm text-zinc-500 underline hover:text-zinc-700"
-          >
+          <Link href="/" className="text-sm text-zinc-500 underline">
             메인으로
           </Link>
         </p>

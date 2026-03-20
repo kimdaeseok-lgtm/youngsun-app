@@ -22,4 +22,3 @@ export function getFirebaseStorage(): FirebaseStorage | null {
   if (!app) return null;
   return getStorage(app);
 }
-

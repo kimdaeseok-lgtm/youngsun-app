@@ -1,26 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import fs from "node:fs";
+import path from "node:path";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "영선일지",
-  description: "영선일지 요청 접수",
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [{ url: "/repair.png" }],
-    apple: [{ url: "/repair.png" }],
-  },
-};
+/** `public/repair.png` 가 없으면 아이콘 메타만 생략 (누락 시 일부 환경에서 500 유발 방지) */
+export async function generateMetadata(): Promise<Metadata> {
+  const repairPath = path.join(process.cwd(), "public", "repair.png");
+  const hasRepair = fs.existsSync(repairPath);
+  const metadata: Metadata = {
+    title: "영선일지",
+    description: "영선 요청 및 조치 관리",
+  };
+  if (hasRepair) {
+    metadata.icons = {
+      icon: [{ url: "/repair.png", type: "image/png" }],
+      apple: [{ url: "/repair.png" }],
+    };
+  }
+  return metadata;
+}
 
 export default function RootLayout({
   children,
@@ -28,12 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="bg-white" style={{ colorScheme: "light" }}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-white antialiased text-zinc-900`}
-      >
-        {children}
-      </body>
+    <html lang="ko">
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

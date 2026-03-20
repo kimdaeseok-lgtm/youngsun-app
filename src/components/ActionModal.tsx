@@ -1,30 +1,52 @@
 "use client";
 
-import { useState } from "react";
-import type { SheetEntry } from "@/types/entry";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { uploadActionPhoto } from "@/lib/upload";
+import type { SheetEntry } from "@/types/entry";
 
-const today = () => new Date().toISOString().slice(0, 10);
-const ACTION_OPTIONS = ["접수", "수리완료", "교체완료", "이상없음", "대기"] as const;
+const ACTION_PRESETS = ["수리완료", "교체완료", "이상없음"] as const;
 
-export default function ActionModal({
-  entry,
-  onClose,
-  onSuccess,
-}: {
-  entry: SheetEntry;
+type ActionModalProps = {
+  entry: SheetEntry | null;
   onClose: () => void;
-  onSuccess: () => void;
-}) {
+};
+
+export default function ActionModal({ entry, onClose }: ActionModalProps) {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [actionContent, setActionContent] = useState("");
+  const [customAction, setCustomAction] = useState("");
+  const [actionDate, setActionDate] = useState(
+    () => new Date().toISOString().slice(0, 10)
+  );
+  const [remarks, setRemarks] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [error, setError] = useState("");
-  const [actionContent, setActionContent] = useState<(typeof ACTION_OPTIONS)[number] | "">("");
-  const [actionDate, setActionDate] = useState(today());
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!entry) return;
+    setActionContent("");
+    setCustomAction("");
+    setActionDate(new Date().toISOString().slice(0, 10));
+    setRemarks("");
+    setPhotoFile(null);
+    setError("");
+    if (fileRef.current) fileRef.current.value = "";
+  }, [entry?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- 행 id 변경 시에만 초기화
+
+  const effectiveAction =
+    actionContent === "기타" ? customAction.trim() : actionContent.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!entry) return;
+    if (!effectiveAction) {
+      setError("조치사항을 선택하거나 입력해 주세요.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -36,129 +58,135 @@ export default function ActionModal({
         });
       }
 
-      const res = await fetch(`/api/entries/${entry.id}/action`, {
+      const res = await fetch(`/api/entries/${encodeURIComponent(entry.id)}/action`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          actionContent: actionContent.trim(),
+          actionContent: effectiveAction,
+          actionDate,
+          remarks: remarks.trim(),
           actionPhotoUrl,
-          actionDate: actionDate || today(),
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "저장에 실패했습니다.");
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
 
-      onSuccess();
+      onClose();
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : "오류");
     } finally {
       setCompressing(false);
       setLoading(false);
     }
   };
 
+  if (!entry) return null;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white shadow-xl"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="action-modal-title"
       >
-        <div className="border-b border-zinc-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-zinc-800">
-            조치 입력
-          </h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            연번 {entry.id} · {entry.requester} · {entry.location}
-          </p>
-          <p className="mt-1 line-clamp-2 text-sm text-zinc-600">
-            {entry.details}
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="p-5">
+        <h2 id="action-modal-title" className="text-lg font-bold text-zinc-900">
+          조치 입력
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          {entry.requester} · {entry.location}
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {error && (
-            <div
-              role="alert"
-              className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
+            <p className="text-sm text-red-600" role="alert">
               {error}
-            </div>
+            </p>
           )}
-          <div className="space-y-4">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-600">
-                조치내용
-              </span>
-              <select
-                value={actionContent}
-                onChange={(e) =>
-                  setActionContent(
-                    (e.target.value as (typeof ACTION_OPTIONS)[number] | "") ?? ""
-                  )
-                }
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
-              >
-                <option value="" disabled>
-                  선택하세요
+
+          <label className="block">
+            <span className="text-sm font-medium text-zinc-600">조치사항</span>
+            <select
+              value={actionContent}
+              onChange={(e) => setActionContent(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
+            >
+              <option value="">선택</option>
+              {ACTION_PRESETS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
                 </option>
-                {ACTION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </label>
+              ))}
+              <option value="기타">기타 (직접 입력)</option>
+            </select>
+          </label>
+
+          {actionContent === "기타" && (
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-600">
-                조치후사진 (선택)
-              </span>
+              <span className="text-sm text-zinc-600">조치 내용</span>
               <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium"
-              />
-              {photoFile && (
-                <p className="mt-1 text-xs text-zinc-500">
-                  선택: {photoFile.name}
-                </p>
-              )}
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-600">
-                조치날짜
-              </span>
-              <input
-                type="date"
-                value={actionDate}
-                onChange={(e) => setActionDate(e.target.value)}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
+                type="text"
+                value={customAction}
+                onChange={(e) => setCustomAction(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
               />
             </label>
-          </div>
-          <div className="mt-6 flex gap-3">
+          )}
+
+          <label className="block">
+            <span className="text-sm text-zinc-600">조치날짜</span>
+            <input
+              type="date"
+              value={actionDate}
+              onChange={(e) => setActionDate(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm text-zinc-600">비고</span>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              rows={3}
+              className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm text-zinc-600">조치 후 사진 (선택)</span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+              className="mt-1 w-full text-sm"
+            />
+          </label>
+
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-zinc-300 bg-white py-3 text-zinc-700"
+              className="flex-1 rounded-xl border border-zinc-300 py-3 font-medium"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-zinc-800 py-3 font-medium text-white disabled:opacity-50"
             >
               {loading ? "저장 중…" : "저장"}
             </button>
           </div>
           {compressing && (
-            <p className="mt-3 text-center text-sm text-zinc-500">
-              이미지 압축 중...
-            </p>
+            <p className="text-center text-sm text-zinc-500">이미지 압축 중…</p>
           )}
         </form>
       </div>

@@ -11,22 +11,20 @@ export async function sendGoogleChatNewRequestMessage(
 ): Promise<{ attempted: boolean; ok: boolean; status?: number; error?: string }> {
   const webhookUrl = (process.env.GOOGLE_CHAT_WEBHOOK_URL ?? "").trim();
   if (!webhookUrl) {
-    return { attempted: false, ok: false, error: "GOOGLE_CHAT_WEBHOOK_URL is not set" };
+    return {
+      attempted: false,
+      ok: false,
+      error: "GOOGLE_CHAT_WEBHOOK_URL is not set",
+    };
   }
-
-  const requester = payload.requester || "-";
-  const location = payload.location || "-";
-  const details = payload.details || "-";
-  const photo = payload.requestPhotoUrl || "-";
-  const adminLink = payload.adminLink || "-";
 
   const text =
     "🔔 영선 요청 등록\n\n" +
-    `- 요청자: ${requester}\n` +
-    `- 장소: ${location}\n` +
-    `- 요청 내용: ${details}\n` +
-    `- 사진 링크: ${photo}\n` +
-    `- 관리자 화면: ${adminLink}`;
+    `- 요청자: ${payload.requester || "-"}\n` +
+    `- 장소: ${payload.location || "-"}\n` +
+    `- 요청 내용: ${payload.details || "-"}\n` +
+    `- 사진 링크: ${payload.requestPhotoUrl || "-"}\n` +
+    `- 담당자 화면: ${payload.adminLink || "-"}`;
 
   const res = await fetch(webhookUrl, {
     method: "POST",
@@ -47,4 +45,3 @@ export async function sendGoogleChatNewRequestMessage(
 
   return { attempted: true, ok: true, status: res.status };
 }
-

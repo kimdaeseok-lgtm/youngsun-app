@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
-export async function GET(request: Request) {
-  const cookieStore = await cookies();
-  cookieStore.delete("admin_session");
-  const url = new URL(request.url);
-  return NextResponse.redirect(new URL("/", url.origin));
+export async function POST() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("admin_session", "", { path: "/", maxAge: 0 });
+  return res;
 }
