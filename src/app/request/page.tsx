@@ -6,7 +6,10 @@ import { uploadRequestPhoto } from "@/lib/upload";
 
 export default function RequestPage() {
   const [loading, setLoading] = useState(false);
-  const [compressing, setCompressing] = useState(false);
+  /** 사진 있을 때: compress → upload → api 순서 안내 */
+  const [progress, setProgress] = useState<
+    null | "compress" | "upload" | "submit"
+  >(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [successDetail, setSuccessDetail] = useState("");
@@ -24,16 +27,18 @@ export default function RequestPage() {
     setError("");
     setSuccess(false);
     setLoading(true);
+    setProgress(null);
     try {
       let requestPhotoUrl = "";
       const tempId = Math.random().toString(36).slice(2, 10);
       if (photoFile) {
         requestPhotoUrl = await uploadRequestPhoto(photoFile, tempId, {
-          onCompressionStart: () => setCompressing(true),
-          onCompressionEnd: () => setCompressing(false),
+          onCompressionStart: () => setProgress("compress"),
+          onCompressionEnd: () => setProgress("upload"),
         });
       }
 
+      setProgress("submit");
       const res = await fetch("/api/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,7 +69,7 @@ export default function RequestPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
-      setCompressing(false);
+      setProgress(null);
       setLoading(false);
     }
   };
@@ -189,11 +194,21 @@ export default function RequestPage() {
             disabled={loading}
             className="mt-8 flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white disabled:opacity-50"
           >
-            {loading ? "접수 중…" : "요청 제출"}
+            {loading
+              ? progress === "compress"
+                ? "사진 압축 중…"
+                : progress === "upload"
+                  ? "사진 업로드 중…"
+                  : progress === "submit"
+                    ? "요청 접수 중…"
+                    : "접수 중…"
+              : "요청 제출"}
           </button>
-          {compressing && (
+          {loading && progress && (
             <p className="mt-2 text-center text-sm text-zinc-500">
-              이미지 압축 중...
+              {progress === "compress" && "이미지를 줄이는 중입니다. 잠시만 기다려 주세요."}
+              {progress === "upload" && "Firebase에 사진을 올리는 중입니다."}
+              {progress === "submit" && "서버에 요청을 등록하는 중입니다."}
             </p>
           )}
         </form>
