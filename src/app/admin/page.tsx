@@ -1,4 +1,4 @@
- run devimport { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getEntries } from "@/lib/sheets";
 import AdminList from "@/components/AdminList";
