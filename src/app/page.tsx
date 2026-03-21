@@ -18,10 +18,10 @@ export default function HomePage() {
             영선 요청
           </Link>
           <Link
-            href="/admin/login"
+            href="/admin"
             className="flex h-14 items-center justify-center rounded-2xl bg-green-600 text-lg font-semibold text-white hover:bg-green-500"
           >
-            담당자 로그인
+            요청 내역
           </Link>
         </div>
         {hasRepair ? (

@@ -15,11 +15,6 @@ export default function AdminList({ entries }: AdminListProps) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
-  const logout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
-  };
-
   const pendingEntries = entries.filter((e) => !(e.actionTaken ?? "").trim());
   const displayEntries = showCompleted ? entries : pendingEntries;
 
@@ -30,22 +25,13 @@ export default function AdminList({ entries }: AdminListProps) {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-zinc-900">영선일지 (담당자)</h1>
-        <div className="flex gap-2">
-          <Link
-            href="/"
-            className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700"
-          >
-            메인
-          </Link>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700"
-          >
-            로그아웃
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-zinc-900">영선일지 요청 내역</h1>
+        <Link
+          href="/"
+          className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700"
+        >
+          메인
+        </Link>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
