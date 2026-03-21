@@ -42,21 +42,55 @@ export async function sendGoogleChatNewRequestMessage(
     };
   }
 
-  /** 스페이스에서 @모두 알림 — Incoming Webhook 텍스트 메시지 형식 */
-  const text =
-    "<users/all> 영선 요청이 접수되었습니다. 확인해 주세요\n\n" +
-    `- 요청자: ${payload.requester || "-"}\n` +
-    `- 장소: ${payload.location || "-"}\n` +
-    `- 요청 내용: ${payload.details || "-"}\n` +
-    `- 사진 링크: ${payload.requestPhotoUrl || "-"}\n` +
-    `- 담당자 화면: ${payload.adminLink || "-"}`;
+  const infoText =
+    `요청자: ${payload.requester || "-"}\n` +
+    `장소: ${payload.location || "-"}\n` +
+    `요청 내용: ${payload.details || "-"}\n` +
+    `<a href="${payload.adminLink}">담당자 화면</a>`;
+
+  const widgets: object[] = [
+    {
+      textParagraph: {
+        text: `<users/all> <b>영선 요청이 접수되었습니다.</b>`,
+      },
+    },
+    {
+      textParagraph: { text: infoText },
+    },
+  ];
+
+  if (payload.requestPhotoUrl) {
+    widgets.push({
+      image: {
+        imageUrl: payload.requestPhotoUrl,
+        altText: "요청 사진",
+      },
+    });
+  }
+
+  const message = {
+    cardsV2: [
+      {
+        cardId: "new-request",
+        card: {
+          header: {
+            title: "영선일지 새 요청",
+            subtitle: new Date().toLocaleString("ko-KR", {
+              timeZone: "Asia/Seoul",
+            }),
+          },
+          sections: [{ widgets }],
+        },
+      },
+    ],
+  };
 
   const results = await Promise.all(
     urls.map(async (webhookUrl) => {
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(message),
         cache: "no-store",
       });
       const body = res.ok ? "" : await res.text().catch(() => "");
