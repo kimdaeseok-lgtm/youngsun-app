@@ -25,7 +25,7 @@ export default function AdminList({ entries }: AdminListProps) {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-zinc-900">영선일지 요청 내역</h1>
+        <h1 className="text-2xl font-bold text-zinc-900">영선 요청 내역</h1>
         <Link
           href="/"
           className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700"
