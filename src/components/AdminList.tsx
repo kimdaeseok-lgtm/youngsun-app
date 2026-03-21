@@ -13,7 +13,6 @@ type AdminListProps = {
 export default function AdminList({ entries }: AdminListProps) {
   const [actionEntry, setActionEntry] = useState<SheetEntry | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [photoLabel, setPhotoLabel] = useState("");
   const [showCompleted, setShowCompleted] = useState(false);
 
   const logout = async () => {
@@ -24,9 +23,8 @@ export default function AdminList({ entries }: AdminListProps) {
   const pendingEntries = entries.filter((e) => !(e.actionTaken ?? "").trim());
   const displayEntries = showCompleted ? entries : pendingEntries;
 
-  const openPhoto = (url: string, label: string) => {
+  const openPhoto = (url: string) => {
     setPhotoUrl(url);
-    setPhotoLabel(label);
   };
 
   return (
@@ -74,13 +72,12 @@ export default function AdminList({ entries }: AdminListProps) {
               <th className="px-3 py-3 font-medium text-zinc-700">내용</th>
               <th className="px-3 py-3 font-medium text-zinc-700">요청사진</th>
               <th className="px-3 py-3 font-medium text-zinc-700">조치</th>
-              <th className="px-3 py-3 font-medium text-zinc-700">조치사진</th>
             </tr>
           </thead>
           <tbody>
             {displayEntries.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
                   {showCompleted ? "등록된 요청이 없습니다." : "미처리 요청이 없습니다."}
                 </td>
               </tr>
@@ -110,7 +107,7 @@ export default function AdminList({ entries }: AdminListProps) {
                     {e.requestPhotoUrl ? (
                       <button
                         type="button"
-                        onClick={() => openPhoto(e.requestPhotoUrl, "요청 사진")}
+                        onClick={() => openPhoto(e.requestPhotoUrl)}
                         className="block overflow-hidden rounded-lg ring-1 ring-zinc-200 transition-opacity hover:opacity-75"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,24 +140,6 @@ export default function AdminList({ entries }: AdminListProps) {
                       </div>
                     )}
                   </td>
-                  <td className="px-3 py-3">
-                    {e.photoView ? (
-                      <button
-                        type="button"
-                        onClick={() => openPhoto(e.photoView, "조치 사진")}
-                        className="block overflow-hidden rounded-lg ring-1 ring-zinc-200 transition-opacity hover:opacity-75"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={e.photoView}
-                          alt="조치 사진"
-                          className="h-14 w-14 object-cover"
-                        />
-                      </button>
-                    ) : (
-                      <span className="text-zinc-400">—</span>
-                    )}
-                  </td>
                 </tr>
               );
             })}
@@ -172,7 +151,7 @@ export default function AdminList({ entries }: AdminListProps) {
       <PhotoModal
         open={Boolean(photoUrl)}
         url={photoUrl ?? ""}
-        title={photoLabel}
+        title="요청 사진"
         onClose={() => setPhotoUrl(null)}
       />
     </>
