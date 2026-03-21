@@ -14,10 +14,19 @@ export default function AdminList({ entries }: AdminListProps) {
   const [actionEntry, setActionEntry] = useState<SheetEntry | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoLabel, setPhotoLabel] = useState("");
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     window.location.href = "/admin/login";
+  };
+
+  const pendingEntries = entries.filter((e) => !(e.actionTaken ?? "").trim());
+  const displayEntries = showCompleted ? entries : pendingEntries;
+
+  const openPhoto = (url: string, label: string) => {
+    setPhotoUrl(url);
+    setPhotoLabel(label);
   };
 
   return (
@@ -41,9 +50,19 @@ export default function AdminList({ entries }: AdminListProps) {
         </div>
       </div>
 
-      <p className="mb-4 text-sm text-zinc-500">
-        총 {entries.length}건 · 최신 요청이 위에 표시됩니다.
-      </p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-zinc-500">
+          미처리 <span className="font-semibold text-amber-700">{pendingEntries.length}건</span>
+          {" · "}전체 {entries.length}건
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowCompleted((v) => !v)}
+          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50"
+        >
+          {showCompleted ? "미처리만 보기" : "완료 포함 전체 보기"}
+        </button>
+      </div>
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200">
         <table className="w-full min-w-[640px] text-left text-sm">
@@ -53,23 +72,20 @@ export default function AdminList({ entries }: AdminListProps) {
               <th className="px-3 py-3 font-medium text-zinc-700">요청자</th>
               <th className="px-3 py-3 font-medium text-zinc-700">장소</th>
               <th className="px-3 py-3 font-medium text-zinc-700">내용</th>
-              <th className="px-3 py-3 font-medium text-zinc-700">사진</th>
+              <th className="px-3 py-3 font-medium text-zinc-700">요청사진</th>
               <th className="px-3 py-3 font-medium text-zinc-700">조치</th>
-              <th className="px-3 py-3 font-medium text-zinc-700" />
+              <th className="px-3 py-3 font-medium text-zinc-700">조치사진</th>
             </tr>
           </thead>
           <tbody>
-            {entries.length === 0 && (
+            {displayEntries.length === 0 && (
               <tr>
-                <td
-                  colSpan={7}
-                  className="px-3 py-8 text-center text-zinc-500"
-                >
-                  등록된 요청이 없습니다.
+                <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                  {showCompleted ? "등록된 요청이 없습니다." : "미처리 요청이 없습니다."}
                 </td>
               </tr>
             )}
-            {entries.map((e) => {
+            {displayEntries.map((e) => {
               const pending = !(e.actionTaken ?? "").trim();
               return (
                 <tr
@@ -94,16 +110,18 @@ export default function AdminList({ entries }: AdminListProps) {
                     {e.requestPhotoUrl ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setPhotoUrl(e.requestPhotoUrl);
-                          setPhotoLabel("요청 사진");
-                        }}
-                        className="text-blue-600 underline"
+                        onClick={() => openPhoto(e.requestPhotoUrl, "요청 사진")}
+                        className="block overflow-hidden rounded-lg ring-1 ring-zinc-200 transition-opacity hover:opacity-75"
                       >
-                        보기
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={e.requestPhotoUrl}
+                          alt="요청 사진"
+                          className="h-14 w-14 object-cover"
+                        />
                       </button>
                     ) : (
-                      "—"
+                      <span className="text-zinc-400">—</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-zinc-700">
@@ -113,31 +131,34 @@ export default function AdminList({ entries }: AdminListProps) {
                         {e.actionDate ? ` (${e.actionDate})` : ""}
                       </span>
                     ) : (
-                      <span className="text-amber-800">미처리</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-800">미처리</span>
+                        <button
+                          type="button"
+                          onClick={() => setActionEntry(e)}
+                          className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-white"
+                        >
+                          조치 입력
+                        </button>
+                      </div>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    {pending ? (
+                  <td className="px-3 py-3">
+                    {e.photoView ? (
                       <button
                         type="button"
-                        onClick={() => setActionEntry(e)}
-                        className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-white"
+                        onClick={() => openPhoto(e.photoView, "조치 사진")}
+                        className="block overflow-hidden rounded-lg ring-1 ring-zinc-200 transition-opacity hover:opacity-75"
                       >
-                        조치 입력
-                      </button>
-                    ) : e.photoView ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPhotoUrl(e.photoView);
-                          setPhotoLabel("조치 사진");
-                        }}
-                        className="text-blue-600 underline"
-                      >
-                        조치사진
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={e.photoView}
+                          alt="조치 사진"
+                          className="h-14 w-14 object-cover"
+                        />
                       </button>
                     ) : (
-                      "—"
+                      <span className="text-zinc-400">—</span>
                     )}
                   </td>
                 </tr>
@@ -147,10 +168,7 @@ export default function AdminList({ entries }: AdminListProps) {
         </table>
       </div>
 
-      <ActionModal
-        entry={actionEntry}
-        onClose={() => setActionEntry(null)}
-      />
+      <ActionModal entry={actionEntry} onClose={() => setActionEntry(null)} />
       <PhotoModal
         open={Boolean(photoUrl)}
         url={photoUrl ?? ""}
