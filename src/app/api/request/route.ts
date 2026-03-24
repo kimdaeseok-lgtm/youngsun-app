@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { appendRequestRow } from "@/lib/sheets";
-import { sendGoogleChatNewRequestMessage } from "@/lib/googleChat";
+import { sendTeamsNewRequestMessage } from "@/lib/msTeams";
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
 export async function POST(request: Request) {
-  let chat: Awaited<ReturnType<typeof sendGoogleChatNewRequestMessage>> | null =
+  let chat: Awaited<ReturnType<typeof sendTeamsNewRequestMessage>> | null =
     null;
   try {
     const body = await request.json();
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const adminLink = `${baseUrl.replace(/\/$/, "")}/admin`;
 
     try {
-      chat = await sendGoogleChatNewRequestMessage({
+      chat = await sendTeamsNewRequestMessage({
         requester,
         location,
         details,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         adminLink,
       });
     } catch (e) {
-      console.error("Google Chat send failed:", e);
+      console.error("MS Teams send failed:", e);
     }
   } catch (e) {
     const message =
