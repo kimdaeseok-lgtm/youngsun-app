@@ -33,62 +33,15 @@ export async function sendTeamsNewRequestMessage(
 
   const now = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
 
-  const facts = [
-    { name: "요청자", value: payload.requester || "-" },
-    { name: "장소", value: payload.location || "-" },
-    { name: "요청 내용", value: payload.details || "-" },
-    { name: "접수 시각", value: now },
-  ];
-
-  const bodyItems: object[] = [
-    {
-      type: "TextBlock",
-      text: "영선일지 새 요청이 접수되었습니다.",
-      weight: "Bolder",
-      size: "Medium",
-      wrap: true,
-    },
-    {
-      type: "FactSet",
-      facts,
-    },
-  ];
-
-  if (payload.requestPhotoUrl) {
-    bodyItems.push({
-      type: "Image",
-      url: payload.requestPhotoUrl,
-      altText: "요청 사진",
-      size: "Large",
-    });
-  }
-
-  bodyItems.push({
-    type: "ActionSet",
-    actions: [
-      {
-        type: "Action.OpenUrl",
-        title: "담당자 화면 열기",
-        url: payload.adminLink,
-      },
-    ],
-  });
-
-  const adaptiveCard = {
-    type: "AdaptiveCard",
-    version: "1.4",
-    body: bodyItems,
-    $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-  };
-
-  const message = {
-    type: "message",
-    attachments: [
-      {
-        contentType: "application/vnd.microsoft.card.adaptive",
-        content: adaptiveCard,
-      },
-    ],
+  // Power Automate HTTP 트리거는 단순 평탄 JSON을 받습니다.
+  // 흐름 안에서 triggerBody()?['requester'] 등으로 각 필드를 꺼내 사용하세요.
+  const body = {
+    requester: payload.requester || "-",
+    location: payload.location || "-",
+    details: payload.details || "-",
+    photoUrl: payload.requestPhotoUrl || "",
+    adminLink: payload.adminLink,
+    timestamp: now,
   };
 
   let res: Response;
@@ -96,7 +49,7 @@ export async function sendTeamsNewRequestMessage(
     res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify(message),
+      body: JSON.stringify(body),
       cache: "no-store",
     });
   } catch (e) {
@@ -107,17 +60,18 @@ export async function sendTeamsNewRequestMessage(
     };
   }
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    return {
-      attempted: true,
-      ok: false,
-      sent: 0,
-      failed: 1,
-      status: res.status,
-      error: body || `MS Teams webhook 실패 (HTTP ${res.status})`,
-    };
+  // Power Automate는 요청을 큐에 넣고 202 Accepted를 반환합니다. 200·202 모두 성공입니다.
+  if (res.status === 200 || res.status === 202) {
+    return { attempted: true, ok: true, sent: 1, failed: 0 };
   }
 
-  return { attempted: true, ok: true, sent: 1, failed: 0 };
+  const resBody = await res.text().catch(() => "");
+  return {
+    attempted: true,
+    ok: false,
+    sent: 0,
+    failed: 1,
+    status: res.status,
+    error: resBody || `MS Teams webhook 실패 (HTTP ${res.status})`,
+  };
 }
