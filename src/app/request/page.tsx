@@ -57,12 +57,12 @@ export default function RequestPage() {
       if (data?.chat?.attempted) {
         setSuccessDetail(
           data?.chat?.ok
-            ? "요청이 접수되었고 MS Teams 알림이 전송되었습니다."
-            : `요청은 접수되었지만 MS Teams 알림 전송에 실패했습니다. ${data?.chat?.error ?? ""}`
+            ? "요청이 접수되었고 Google Chat 알림이 전송되었습니다."
+            : `요청은 접수되었지만 Google Chat 알림 전송에 실패했습니다. ${data?.chat?.error ?? ""}`
         );
       } else {
         setSuccessDetail(
-          "요청이 접수되었습니다. (MS_TEAMS_WEBHOOK_URL 설정 시 알림이 전송됩니다.)"
+          "요청이 접수되었습니다. (GOOGLE_CHAT_WEBHOOK_URL 설정 시 알림이 전송됩니다.)"
         );
       }
       setSuccess(true);
