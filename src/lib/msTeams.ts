@@ -23,13 +23,13 @@ function getWebhookUrl(): string {
     "https://default87c603e8c453422aa9c8b908435053" +
     ".06.environment.api.powerplatform.com:443" +
     "/powerautomate/automations/direct/workflows" +
-    "/fa7587b8e8384c689a119aaa90a532c5" +
+    "/ae3ccfb44daa40cf90fa476e88c463af" +
     "/triggers/manual/paths/invoke";
   const params =
     "?api-version=1" +
     "&sp=%2Ftriggers%2Fmanual%2Frun" +
     "&sv=1.0" +
-    "&sig=FojzrljP6KjyEjrG_jNI2UCeonRDrAIVDZowc6DM78I";
+    "&sig=fOnhKG3Jrxopinn9Ps-NZ0_0Xc9qqSKQuUm73Jlokd0";
   return base + params;
 }
 
