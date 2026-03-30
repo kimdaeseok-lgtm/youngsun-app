@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { findRowIndexById, updateRowAction } from "@/lib/sheets";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_session")?.value !== "1") {
-    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
-  }
-
   try {
     const { id } = await params;
     const body = await request.json();
