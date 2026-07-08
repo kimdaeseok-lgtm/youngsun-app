@@ -26,11 +26,17 @@ function b64urlToBytes(s: string): Uint8Array {
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return arr;
 }
+/** Uint8Array → 새 ArrayBuffer 복사 (crypto.subtle 의 BufferSource 타입 요구 충족) */
+function toBuffer(data: Uint8Array): ArrayBuffer {
+  const buf = new ArrayBuffer(data.byteLength);
+  new Uint8Array(buf).set(data);
+  return buf;
+}
 
 async function hmacKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
-    encoder.encode(secret),
+    toBuffer(encoder.encode(secret)),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"]
@@ -51,7 +57,7 @@ export async function createSessionToken(
   const payloadB64 = bytesToB64url(encoder.encode(payload));
   const key = await hmacKey(secret);
   const sig = new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, encoder.encode(payloadB64))
+    await crypto.subtle.sign("HMAC", key, toBuffer(encoder.encode(payloadB64)))
   );
   return `${payloadB64}.${bytesToB64url(sig)}`;
 }
@@ -69,8 +75,8 @@ export async function verifySessionToken(
     const valid = await crypto.subtle.verify(
       "HMAC",
       key,
-      b64urlToBytes(sigB64),
-      encoder.encode(payloadB64)
+      toBuffer(b64urlToBytes(sigB64)),
+      toBuffer(encoder.encode(payloadB64))
     );
     if (!valid) return null;
     const payload = JSON.parse(
