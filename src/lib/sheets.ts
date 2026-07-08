@@ -108,11 +108,6 @@ export async function getEntries(): Promise<SheetEntry[]> {
     });
 }
 
-/** G열(조치사항)이 비어 있는 항목 */
-export function getPendingEntries(entries: SheetEntry[]): SheetEntry[] {
-  return entries.filter((e) => !(e.actionTaken ?? "").trim());
-}
-
 export async function findRowIndexById(id: string): Promise<number | null> {
   const spreadsheetId = getSpreadsheetId();
   const auth = await getAuth();

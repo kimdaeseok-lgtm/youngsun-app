@@ -40,6 +40,12 @@ export default function HomePage() {
             넣어 주세요. (탭 아이콘·이미지용)
           </p>
         )}
+        <a
+          href="/api/auth/logout"
+          className="text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-600"
+        >
+          로그아웃
+        </a>
       </div>
     </main>
   );
