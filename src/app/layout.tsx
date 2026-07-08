@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const repairPath = path.join(process.cwd(), "public", "repair.png");
   const hasRepair = fs.existsSync(repairPath);
   const metadata: Metadata = {
-    title: "영선일지",
+    title: "영선 요청",
     description: "영선 요청 및 조치 관리",
   };
   if (hasRepair) {

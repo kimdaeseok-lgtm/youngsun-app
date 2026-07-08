@@ -74,7 +74,7 @@ export async function sendGoogleChatNewRequestMessage(
         cardId: "new-request",
         card: {
           header: {
-            title: "영선일지 새 요청",
+            title: "새 영선 요청",
             subtitle: new Date().toLocaleString("ko-KR", {
               timeZone: "Asia/Seoul",
             }),

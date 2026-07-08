@@ -1,6 +1,6 @@
 import { ALLOWED_DOMAIN, safeNextPath } from "@/lib/auth";
 
-export const metadata = { title: "로그인 | 영선일지" };
+export const metadata = { title: "로그인 | 영선 요청" };
 
 const ERROR_MESSAGES: Record<string, string> = {
   domain: `${process.env.ALLOWED_EMAIL_DOMAIN ?? "shimteo.org"} 계정으로만 로그인할 수 있습니다. 조직 구글 계정으로 다시 시도해 주세요.`,
@@ -22,7 +22,7 @@ export default async function LoginPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-white px-4">
       <div className="flex w-full flex-col items-center gap-6 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-zinc-900">영선일지</h1>
+        <h1 className="text-2xl font-bold text-zinc-900">영선 요청</h1>
         <p className="text-center text-sm text-zinc-500">
           {ALLOWED_DOMAIN} 구글 계정으로 로그인해 주세요.
         </p>

@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 py-8">
       <div className="flex w-full flex-col items-center gap-8">
-        <h1 className="text-2xl font-bold text-zinc-800">영선일지</h1>
+        <h1 className="text-2xl font-bold text-zinc-800">영선 요청</h1>
         <div className="flex w-full flex-col gap-3">
           <Link
             href="/request"
@@ -28,7 +28,7 @@ export default function HomePage() {
           // next/image 는 파일이 없을 때 개발 서버에서 500이 날 수 있어 일반 img 사용
           <img
             src="/repair.png"
-            alt="영선일지"
+            alt="영선 요청"
             width={176}
             height={176}
             className="h-36 w-36 object-contain sm:h-40 sm:w-40"

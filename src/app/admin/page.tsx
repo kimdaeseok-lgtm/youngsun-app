@@ -2,7 +2,7 @@ import { getEntries } from "@/lib/sheets";
 import AdminList from "@/components/AdminList";
 
 export const metadata = {
-  title: "요청 내역 | 영선일지",
+  title: "요청 내역 | 영선 요청",
 };
 
 export const dynamic = "force-dynamic";
