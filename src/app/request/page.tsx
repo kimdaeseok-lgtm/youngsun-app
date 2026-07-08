@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { uploadRequestPhoto } from "@/lib/upload";
 
@@ -21,6 +21,16 @@ export default function RequestPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 로그인한 계정 이름을 요청자에 자동 입력(비어 있을 때만)
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && d.name) setForm((f) => (f.requester ? f : { ...f, requester: d.name }));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +131,9 @@ export default function RequestPage() {
                 }
                 className="min-h-[48px] w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900"
               />
+              <span className="mt-1 block text-xs text-zinc-400">
+                로그인한 계정 이름이 자동으로 입력됩니다. 필요하면 수정하세요.
+              </span>
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-zinc-600">
