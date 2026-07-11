@@ -1,0 +1,13 @@
+{
+  "name": "쉼터 인트라넷",
+  "short_name": "쉼터",
+  "start_url": "/intranet?launch=1",
+  "scope": "/intranet",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a5c3a",
+  "icons": [
+    { "src": "/shimteo-ci.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/shimteo-ci.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
