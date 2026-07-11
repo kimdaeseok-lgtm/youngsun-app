@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { uploadRequestPhoto } from "@/lib/upload";
 
 export default function RequestPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   /** 사진 있을 때: compress → upload → api 순서 안내 */
   const [progress, setProgress] = useState<
@@ -76,6 +78,8 @@ export default function RequestPage() {
         );
       }
       setSuccess(true);
+      // 접수 완료 후 메인 화면으로 자동 이동(성공 메시지를 잠깐 보여준 뒤)
+      setTimeout(() => router.push("/"), 1200);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
