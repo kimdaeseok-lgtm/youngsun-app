@@ -7,7 +7,7 @@
   "background_color": "#ffffff",
   "theme_color": "#1a5c3a",
   "icons": [
-    { "src": "/shimteo-ci.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/shimteo-ci.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "/shimteo_ci.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/shimteo_ci.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

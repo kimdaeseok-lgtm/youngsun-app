@@ -24,6 +24,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // 로그인 페이지·인증 API·정적 리소스는 미들웨어 제외
   matcher: [
-    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|repair.png|shimteo-ci.png|intranet|robots.txt|sitemap.xml).*)",
+    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|repair.png|shimteo_ci.png|intranet|robots.txt|sitemap.xml).*)",
   ],
 };

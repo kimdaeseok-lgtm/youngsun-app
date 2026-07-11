@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   title: "쉼터 인트라넷",
   manifest: "/intranet.webmanifest",
   icons: {
-    icon: "/shimteo-ci.png",
-    shortcut: "/shimteo-ci.png",
-    apple: "/shimteo-ci.png",
+    icon: "/shimteo_ci.png",
+    shortcut: "/shimteo_ci.png",
+    apple: "/shimteo_ci.png",
   },
 };
 

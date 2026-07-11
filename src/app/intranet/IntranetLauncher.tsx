@@ -45,7 +45,7 @@ export default function IntranetLauncher({ url }: { url: string }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/shimteo-ci.png"
+        src="/shimteo_ci.png"
         alt="쉼터"
         style={{ width: "140px", height: "140px", objectFit: "contain" }}
       />
