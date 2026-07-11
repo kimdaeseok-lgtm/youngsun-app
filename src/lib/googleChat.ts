@@ -146,6 +146,11 @@ export async function sendGoogleChatDirectMessage(params: {
     return { attempted: false, ok: false, error: "요청자 이메일이 없습니다(로그인 이전에 접수된 요청일 수 있음)." };
   }
   try {
+    // 앱(서비스계정) 인증은 이메일 별칭으로 사용자를 못 찾음 → 먼저 디렉터리에서 숫자 ID로 변환
+    const userId = await resolveChatUserId(email);
+    if (!userId) {
+      return { attempted: true, ok: false, error: `사용자 ID를 찾지 못했습니다(디렉터리 조회 실패): ${email}` };
+    }
     const credentials = await loadServiceAccountCredentials();
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -153,8 +158,8 @@ export async function sendGoogleChatDirectMessage(params: {
     });
     const chat = google.chat({ version: "v1", auth });
 
-    // 1) 요청자와의 DM 방 찾기(이메일 별칭 사용)
-    const dm = await chat.spaces.findDirectMessage({ name: `users/${email}` });
+    // 1) 요청자와의 DM 방 찾기(숫자 사용자 ID)
+    const dm = await chat.spaces.findDirectMessage({ name: `users/${userId}` });
     const space = dm.data?.name;
     if (!space) {
       return { attempted: true, ok: false, error: "DM 방을 찾지 못했습니다(앱이 사용자에게 DM 가능하도록 설정 필요)." };
@@ -175,4 +180,31 @@ export async function sendGoogleChatDirectMessage(params: {
       error: err?.message || "구글 챗 DM 전송 실패",
     };
   }
+}
+
+/**
+ * 이메일 → 구글 챗 사용자 숫자 ID.
+ * 앱(서비스계정) 인증은 이메일로 사용자를 못 찾으므로, Admin SDK Directory API로 조회한다.
+ * 도메인 전체 위임(DWD)으로 관리자(GOOGLE_ADMIN_EMAIL)를 가장해 users.get(email) → id.
+ */
+async function resolveChatUserId(email: string): Promise<string | null> {
+  const adminEmail = (process.env.GOOGLE_ADMIN_EMAIL ?? "").trim();
+  if (!adminEmail) {
+    throw new Error(
+      "GOOGLE_ADMIN_EMAIL 미설정: 디렉터리 조회에 사용할 관리자 이메일이 필요합니다."
+    );
+  }
+  const creds = (await loadServiceAccountCredentials()) as {
+    client_email: string;
+    private_key: string;
+  };
+  const jwt = new google.auth.JWT({
+    email: creds.client_email,
+    key: creds.private_key,
+    scopes: ["https://www.googleapis.com/auth/admin.directory.user.readonly"],
+    subject: adminEmail, // 도메인 전체 위임: 관리자 가장
+  });
+  const admin = google.admin({ version: "directory_v1", auth: jwt });
+  const res = await admin.users.get({ userKey: email });
+  return (res.data.id as string | undefined) ?? null;
 }
