@@ -22,7 +22,7 @@ function getSpreadsheetId(): string {
   throw new Error("GOOGLE_SHEETS_ID (or GOOGLE_SHEETS_URL) is not set");
 }
 
-async function loadServiceAccountCredentials(): Promise<object> {
+export async function loadServiceAccountCredentials(): Promise<object> {
   const clientEmail = (process.env.GOOGLE_CLIENT_EMAIL ?? "").trim();
   const privateKeyRaw = (process.env.GOOGLE_PRIVATE_KEY ?? "").trim();
 
@@ -159,6 +159,8 @@ export async function appendRequestRow(entry: {
   location: string;
   details: string;
   requestPhotoUrl: string;
+  /** 요청자 구글 이메일(로그인 계정) — 조치 완료 시 개인 DM 발송용. K열에 저장. */
+  requesterEmail?: string;
 }): Promise<void> {
   const spreadsheetId = getSpreadsheetId();
   const auth = await getAuth();
@@ -176,11 +178,38 @@ export async function appendRequestRow(entry: {
     "",
     "",
     photoView,
+    entry.requesterEmail || "", // K열: 요청자 이메일
   ];
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${quoteSheetNameIfNeeded(sheetName)}!A:J`,
+    range: `${quoteSheetNameIfNeeded(sheetName)}!A:K`,
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [row] },
   });
+}
+
+/** 조치 완료 DM 발송에 필요한 요청자 정보(이메일·이름·요청 요약)를 id로 조회. K열=이메일. */
+export async function getRequestContactById(id: string): Promise<{
+  requester: string;
+  requesterEmail: string;
+  location: string;
+  details: string;
+} | null> {
+  const spreadsheetId = getSpreadsheetId();
+  const auth = await getAuth();
+  const sheets = google.sheets({ version: "v4", auth });
+  const sheetName = await getSheetName(spreadsheetId, auth);
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${quoteSheetNameIfNeeded(sheetName)}!A2:K`,
+  });
+  const rows = (res.data.values ?? []) as string[][];
+  const row = rows.find((r) => (r[0] ?? "").trim() === id);
+  if (!row) return null;
+  return {
+    requester: (row[2] ?? "").trim(),
+    location: (row[3] ?? "").trim(),
+    details: (row[4] ?? "").trim(),
+    requesterEmail: (row[10] ?? "").trim(),
+  };
 }

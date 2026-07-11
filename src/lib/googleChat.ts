@@ -1,3 +1,6 @@
+import { google } from "googleapis";
+import { loadServiceAccountCredentials } from "@/lib/sheets";
+
 type NewRequestChatPayload = {
   requester: string;
   location: string;
@@ -124,4 +127,52 @@ export async function sendGoogleChatNewRequestMessage(
       error: `${failed.length}개 웹훅 실패, ${okCount}개 성공`,
     }),
   };
+}
+
+/**
+ * 조치 완료를 '요청자 본인에게' 구글 챗 개인 DM으로 발송.
+ * - 시트에 쓰는 서비스계정을 그대로 챗 앱(봇)으로 사용(scope=chat.bot).
+ * - 흐름: findDirectMessage(users/{email})로 DM 방을 찾고 → messages.create로 메시지 전송.
+ * - 저장을 막지 않도록 실패해도 예외를 던지지 않고 결과 객체로 반환.
+ * ※ 사전 설정(구글 클라우드): Chat API 사용 설정 + 앱(봇) 구성 + 조직에 앱 노출/DM 허용.
+ */
+export async function sendGoogleChatDirectMessage(params: {
+  email: string;
+  text: string;
+}): Promise<ChatNotifyResult> {
+  const email = (params.email ?? "").trim();
+  const text = (params.text ?? "").trim();
+  if (!email) {
+    return { attempted: false, ok: false, error: "요청자 이메일이 없습니다(로그인 이전에 접수된 요청일 수 있음)." };
+  }
+  try {
+    const credentials = await loadServiceAccountCredentials();
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ["https://www.googleapis.com/auth/chat.bot"],
+    });
+    const chat = google.chat({ version: "v1", auth });
+
+    // 1) 요청자와의 DM 방 찾기(이메일 별칭 사용)
+    const dm = await chat.spaces.findDirectMessage({ name: `users/${email}` });
+    const space = dm.data?.name;
+    if (!space) {
+      return { attempted: true, ok: false, error: "DM 방을 찾지 못했습니다(앱이 사용자에게 DM 가능하도록 설정 필요)." };
+    }
+
+    // 2) 메시지 전송
+    await chat.spaces.messages.create({
+      parent: space,
+      requestBody: { text },
+    });
+    return { attempted: true, ok: true, sent: 1, failed: 0 };
+  } catch (e) {
+    const err = e as { code?: number; message?: string };
+    return {
+      attempted: true,
+      ok: false,
+      status: err?.code,
+      error: err?.message || "구글 챗 DM 전송 실패",
+    };
+  }
 }
