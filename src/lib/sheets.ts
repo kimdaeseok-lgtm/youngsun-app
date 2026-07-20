@@ -6,6 +6,12 @@ function quoteSheetNameIfNeeded(sheetName: string): string {
   return `'${escaped}'`;
 }
 
+function buildThumbnailFormula(photoUrl: string): string {
+  const safeUrl = (photoUrl ?? "").trim().replace(/"/g, '""');
+  if (!safeUrl) return "";
+  return `=IMAGE("${safeUrl}", 4, 80, 80)`;
+}
+
 function extractSpreadsheetId(input: string): string | null {
   const raw = (input ?? "").trim();
   if (!raw) return null;
@@ -85,6 +91,7 @@ function rowToEntry(row: string[]): SheetEntry {
     actionDate: row[7] ?? "",
     remarks: row[8] ?? "",
     photoView: row[9] ?? "",
+    requesterEmail: row[10] ?? "",
   };
 }
 
@@ -152,6 +159,71 @@ export async function updateRowAction(
   });
 }
 
+export async function updateRequestRow(
+  rowIndex: number,
+  payload: {
+    requester: string;
+    location: string;
+    details: string;
+    requestPhotoUrl: string;
+  }
+): Promise<void> {
+  const spreadsheetId = getSpreadsheetId();
+  const auth = await getAuth();
+  const sheets = google.sheets({ version: "v4", auth });
+  const sheetName = await getSheetName(spreadsheetId, auth);
+  const prefix = quoteSheetNameIfNeeded(sheetName);
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      valueInputOption: "USER_ENTERED",
+      data: [
+        { range: `${prefix}!C${rowIndex}`, values: [[payload.requester]] },
+        { range: `${prefix}!D${rowIndex}`, values: [[payload.location]] },
+        { range: `${prefix}!E${rowIndex}`, values: [[payload.details]] },
+        { range: `${prefix}!F${rowIndex}`, values: [[payload.requestPhotoUrl]] },
+        { range: `${prefix}!J${rowIndex}`, values: [[buildThumbnailFormula(payload.requestPhotoUrl)]] },
+      ],
+    },
+  });
+}
+
+export async function deleteRequestRow(rowIndex: number): Promise<void> {
+  const spreadsheetId = getSpreadsheetId();
+  const auth = await getAuth();
+  const sheets = google.sheets({ version: "v4", auth });
+  const sheetName = await getSheetName(spreadsheetId, auth);
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets(properties(sheetId,title))",
+  });
+  const sheet = meta.data.sheets?.find(
+    (s) => s.properties?.title?.trim() === sheetName.trim()
+  );
+  const sheetId = sheet?.properties?.sheetId;
+  if (sheetId == null) {
+    throw new Error("시트 정보를 찾을 수 없습니다.");
+  }
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowIndex - 1,
+              endIndex: rowIndex,
+            },
+          },
+        },
+      ],
+    },
+  });
+}
+
 export async function appendRequestRow(entry: {
   id: string;
   requestDate: string;
@@ -166,7 +238,7 @@ export async function appendRequestRow(entry: {
   const auth = await getAuth();
   const sheets = google.sheets({ version: "v4", auth });
   const sheetName = await getSheetName(spreadsheetId, auth);
-  const photoView = entry.requestPhotoUrl || "";
+  const photoView = buildThumbnailFormula(entry.requestPhotoUrl);
   const row = [
     entry.id,
     entry.requestDate,

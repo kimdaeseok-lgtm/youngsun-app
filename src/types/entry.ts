@@ -7,6 +7,8 @@ export type SheetEntry = {
   details: string;
   /** 요청사항사진 (Firebase Storage 다운로드 URL 등) */
   requestPhotoUrl: string;
+  /** 요청자 구글 이메일(로그인 계정) */
+  requesterEmail?: string;
   /** 조치사항 */
   actionTaken: string;
   /** 조치날짜 */

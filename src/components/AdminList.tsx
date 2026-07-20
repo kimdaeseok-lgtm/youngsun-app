@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { SheetEntry } from "@/types/entry";
 import ActionModal from "./ActionModal";
+import EditRequestModal from "./EditRequestModal";
 import PhotoModal from "./PhotoModal";
 
 type AdminListProps = {
@@ -11,15 +13,63 @@ type AdminListProps = {
 };
 
 export default function AdminList({ entries }: AdminListProps) {
+  const router = useRouter();
   const [actionEntry, setActionEntry] = useState<SheetEntry | null>(null);
+  const [editEntry, setEditEntry] = useState<SheetEntry | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [localEntries, setLocalEntries] = useState(entries);
 
-  const pendingEntries = entries.filter((e) => !(e.actionTaken ?? "").trim());
-  const displayEntries = showCompleted ? entries : pendingEntries;
+  useEffect(() => {
+    setLocalEntries(entries);
+  }, [entries]);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setCurrentUserEmail(data?.email ?? ""))
+      .catch(() => setCurrentUserEmail(""));
+  }, []);
+
+  const pendingEntries = localEntries.filter((e) => !(e.actionTaken ?? "").trim());
+  const displayEntries = showCompleted ? localEntries : pendingEntries;
 
   const openPhoto = (url: string) => {
     setPhotoUrl(url);
+  };
+
+  const handleDelete = async (entry: SheetEntry) => {
+    if (!window.confirm("이 요청을 삭제하시겠습니까?")) return;
+    setDeletingId(entry.id);
+    setError("");
+    setNotice("");
+    try {
+      const res = await fetch(`/api/entries/${encodeURIComponent(entry.id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "삭제에 실패했습니다.");
+      setLocalEntries((prev) => prev.filter((item) => item.id !== entry.id));
+      setNotice("요청이 삭제되었습니다.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleEditSuccess = (updatedEntry: SheetEntry) => {
+    setLocalEntries((prev) =>
+      prev.map((item) => (item.id === updatedEntry.id ? updatedEntry : item))
+    );
+    setNotice("요청이 수정되었습니다.");
+    setEditEntry(null);
+    router.refresh();
   };
 
   return (
@@ -35,10 +85,15 @@ export default function AdminList({ entries }: AdminListProps) {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-zinc-500">
-          미처리 <span className="font-semibold text-amber-700">{pendingEntries.length}건</span>
-          {" · "}전체 {entries.length}건
-        </p>
+        <div>
+          <p className="text-sm text-zinc-500">
+            미처리 <span className="font-semibold text-amber-700">{pendingEntries.length}건</span>
+            {" · "}전체 {localEntries.length}건
+          </p>
+          <p className="mt-1 text-xs text-zinc-400">
+            본인이 등록한 요청만 수정·삭제할 수 있어요.
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => setShowCompleted((v) => !v)}
@@ -47,6 +102,17 @@ export default function AdminList({ entries }: AdminListProps) {
           {showCompleted ? "미처리만 보기" : "완료 포함 전체 보기"}
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {notice}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-2xl border border-zinc-200">
         <table className="w-full min-w-[640px] text-left text-sm">
@@ -70,6 +136,7 @@ export default function AdminList({ entries }: AdminListProps) {
             )}
             {displayEntries.map((e) => {
               const pending = !(e.actionTaken ?? "").trim();
+              const canManage = !e.requesterEmail || !currentUserEmail || e.requesterEmail === currentUserEmail;
               return (
                 <tr
                   key={e.id}
@@ -114,7 +181,7 @@ export default function AdminList({ entries }: AdminListProps) {
                         {e.actionDate ? ` (${e.actionDate})` : ""}
                       </span>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-amber-800">미처리</span>
                         <button
                           type="button"
@@ -122,6 +189,25 @@ export default function AdminList({ entries }: AdminListProps) {
                           className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-white"
                         >
                           조치 입력
+                        </button>
+                      </div>
+                    )}
+                    {canManage && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditEntry(e)}
+                          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700"
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(e)}
+                          disabled={deletingId === e.id}
+                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-50"
+                        >
+                          {deletingId === e.id ? "삭제 중..." : "삭제"}
                         </button>
                       </div>
                     )}
@@ -134,6 +220,11 @@ export default function AdminList({ entries }: AdminListProps) {
       </div>
 
       <ActionModal entry={actionEntry} onClose={() => setActionEntry(null)} />
+      <EditRequestModal
+        entry={editEntry}
+        onClose={() => setEditEntry(null)}
+        onSaved={handleEditSuccess}
+      />
       <PhotoModal
         open={Boolean(photoUrl)}
         url={photoUrl ?? ""}
