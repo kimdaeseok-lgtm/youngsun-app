@@ -188,7 +188,7 @@ export default function RequestPage() {
               <input
                 ref={cameraInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 capture="environment"
                 onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
                 className="hidden"
@@ -196,7 +196,7 @@ export default function RequestPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
                 className="hidden"
               />

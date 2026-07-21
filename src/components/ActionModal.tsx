@@ -163,7 +163,7 @@ export default function ActionModal({ entry, onClose }: ActionModalProps) {
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
               className="mt-1 w-full text-sm"
             />

@@ -59,6 +59,67 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   });
 }
 
+function getSafeExtensionFromFile(file: File): string {
+  const lowerName = file.name.toLowerCase();
+  const ext = lowerName.split(".").pop();
+  const mimeMap: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/heic": "jpg",
+    "image/heif": "jpg",
+  };
+
+  if (file.type && mimeMap[file.type]) return mimeMap[file.type];
+  if (ext && ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"].includes(ext)) {
+    if (ext === "heic" || ext === "heif") return "jpg";
+    return ext === "jpeg" ? "jpg" : ext;
+  }
+  return "jpg";
+}
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const shouldConvert =
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    /\.(heic|heif)$/i.test(file.name);
+
+  if (!shouldConvert) return file;
+
+  const imageUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
+      image.src = imageUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+
+    context.drawImage(img, 0, 0);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    });
+
+    if (!blob) return file;
+
+    const convertedName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    return new File([blob], convertedName, { type: "image/jpeg" });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 async function compressImageSafely(file: File): Promise<File> {
   try {
     return await imageCompression(file, COMPRESSION_OPTIONS);
@@ -74,7 +135,8 @@ async function compressImageSafely(file: File): Promise<File> {
 
 /** 업로드 직전 항상 browser-image-compression 적용 */
 async function compressForUpload(file: File): Promise<File> {
-  return compressImageSafely(file);
+  const normalized = await convertHeicToJpeg(file);
+  return compressImageSafely(normalized);
 }
 
 /** 일부 환경에서 uploadBytes가 멈추는 보고가 있어 resumable 사용 */
@@ -108,8 +170,7 @@ async function uploadCompressed(
     );
   }
 
-  const ext = compressed.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const safeExt = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext) ? ext : "jpg";
+  const safeExt = getSafeExtensionFromFile(compressed);
   const path = `${BUCKET_PREFIX}/${folder}/${entryId}_${Date.now()}.${safeExt}`;
   const storageRef = ref(storage, path);
   options?.onUploadStart?.();
